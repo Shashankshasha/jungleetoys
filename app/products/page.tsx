@@ -413,7 +413,7 @@ export default function ProductsPage() {
                     <label
                       key={range.label}
                       className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors
-                                ${selectedPriceRange?.label === range.label ? 'bg-jungle-100' : 'hover:bg-gray-50'}`}
+                                ${selectedPriceRange?.min === range.min && selectedPriceRange?.max === range.max ? 'bg-jungle-100' : 'hover:bg-gray-50'}`}
                     >
                       <input
                         type="radio"

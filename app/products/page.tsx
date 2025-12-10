@@ -242,7 +242,7 @@ export default function ProductsPage() {
     searchParams.get('category') ? [searchParams.get('category')!] : []
   );
   const [selectedAges, setSelectedAges] = useState<string[]>([]);
-  const [selectedPriceRange, setSelectedPriceRange] = useState<{ min: number; max: number } | null>(null);
+  const [selectedPriceRange, setSelectedPriceRange] = useState<{ label: string; min: number; max: number } | null>(null);
   const [sortBy, setSortBy] = useState('featured');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');

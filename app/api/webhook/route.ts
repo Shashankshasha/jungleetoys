@@ -65,9 +65,3 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ received: true });
 }
 
-// Disable body parsing for webhooks (Stripe needs raw body)
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};

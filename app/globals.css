@@ -1,0 +1,189 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --jungle-primary: #22c55e;
+  --tiger-primary: #f97316;
+  --banana-primary: #facc15;
+  --parrot-primary: #06b6d4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Nunito', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f0fdf4 0%, #fff7ed 50%, #fefce8 100%);
+  min-height: 100vh;
+}
+
+/* Playful selection color */
+::selection {
+  background-color: #86efac;
+  color: #166534;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0fdf4;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+  border-radius: 10px;
+  border: 2px solid #f0fdf4;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #16a34a, #15803d);
+}
+
+/* Utility classes */
+@layer utilities {
+  .text-gradient-jungle {
+    @apply bg-gradient-to-r from-jungle-600 via-jungle-500 to-parrot-500 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-tiger {
+    @apply bg-gradient-to-r from-tiger-500 via-banana-500 to-tiger-400 bg-clip-text text-transparent;
+  }
+
+  .btn-jungle {
+    @apply bg-gradient-to-r from-jungle-500 to-jungle-600 text-white font-semibold 
+           px-6 py-3 rounded-full shadow-lg shadow-jungle-500/30 
+           hover:shadow-xl hover:shadow-jungle-500/40 hover:scale-105 
+           transition-all duration-300 active:scale-95;
+  }
+
+  .btn-tiger {
+    @apply bg-gradient-to-r from-tiger-500 to-tiger-600 text-white font-semibold 
+           px-6 py-3 rounded-full shadow-lg shadow-tiger-500/30 
+           hover:shadow-xl hover:shadow-tiger-500/40 hover:scale-105 
+           transition-all duration-300 active:scale-95;
+  }
+
+  .card-toy {
+    @apply bg-white/80 backdrop-blur-sm rounded-3xl p-6 
+           shadow-xl shadow-jungle-900/5 border border-white/50
+           hover:shadow-2xl hover:shadow-jungle-900/10 hover:-translate-y-2 
+           transition-all duration-300;
+  }
+
+  .jungle-border {
+    @apply border-4 border-dashed border-jungle-300 rounded-3xl;
+  }
+
+  .floating {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .wiggle-hover:hover {
+    animation: wiggle 0.5s ease-in-out;
+  }
+}
+
+/* Product card hover effects */
+.product-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(34, 197, 94, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  transition: all 0.5s;
+  opacity: 0;
+}
+
+.product-card:hover::before {
+  animation: shine 0.75s ease-in-out;
+}
+
+@keyframes shine {
+  0% {
+    left: -50%;
+    opacity: 1;
+  }
+  100% {
+    left: 150%;
+    opacity: 0;
+  }
+}
+
+/* Badge animations */
+.badge-new {
+  @apply absolute top-4 right-4 bg-gradient-to-r from-parrot-400 to-parrot-500 
+         text-white text-xs font-bold px-3 py-1 rounded-full 
+         shadow-lg animate-pulse;
+}
+
+.badge-sale {
+  @apply absolute top-4 left-4 bg-gradient-to-r from-tiger-500 to-banana-500 
+         text-white text-xs font-bold px-3 py-1 rounded-full 
+         shadow-lg;
+}
+
+/* Loading spinner */
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #22c55e;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Toast notifications */
+.toast {
+  @apply fixed bottom-6 right-6 bg-white rounded-2xl shadow-2xl p-4 
+         flex items-center gap-3 z-50 animate-slide-in-right;
+}
+
+/* Input styling */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  @apply w-full px-4 py-3 rounded-xl border-2 border-jungle-200 
+         focus:border-jungle-500 focus:ring-4 focus:ring-jungle-500/20 
+         outline-none transition-all duration-200 bg-white/80;
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+  @apply w-5 h-5 rounded border-2 border-jungle-300 
+         checked:bg-jungle-500 checked:border-jungle-500 
+         focus:ring-2 focus:ring-jungle-500/20;
+}

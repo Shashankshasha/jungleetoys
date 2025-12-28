@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Package,
@@ -15,83 +15,106 @@ import {
   BarChart3,
   Settings,
   Home,
+  Loader2,
 } from 'lucide-react';
 import { formatPrice } from '@/lib/cart';
 import { Product } from '@/lib/supabase';
-
-// Sample data - in production, fetch from Supabase
-const stats = {
-  totalRevenue: 12450.99,
-  totalOrders: 156,
-  totalProducts: 48,
-  totalCustomers: 89,
-};
-
-const recentOrders = [
-  { id: 'JT-ABC123', customer: 'John Smith', total: 54.99, status: 'shipped', date: '2024-01-15' },
-  { id: 'JT-DEF456', customer: 'Sarah Johnson', total: 89.99, status: 'paid', date: '2024-01-15' },
-  { id: 'JT-GHI789', customer: 'Mike Brown', total: 124.50, status: 'delivered', date: '2024-01-14' },
-  { id: 'JT-JKL012', customer: 'Emma Wilson', total: 34.99, status: 'pending', date: '2024-01-14' },
-];
-
-const sampleProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Super Hero Action Figure Set',
-    slug: 'super-hero-action-figure-set',
-    description: 'Amazing collection',
-    price: 24.99,
-    compare_price: 34.99,
-    category_id: 'action-figures',
-    images: [],
-    stock: 15,
-    featured: true,
-    is_new: true,
-    age_range: '5-12 years',
-    brand: 'HeroWorld',
-    created_at: '2024-01-10',
-    updated_at: '2024-01-10',
-  },
-  {
-    id: '2',
-    name: 'Wooden Building Blocks (100 pcs)',
-    slug: 'wooden-building-blocks-100',
-    description: 'Educational blocks',
-    price: 29.99,
-    category_id: 'building-blocks',
-    images: [],
-    stock: 25,
-    featured: true,
-    is_new: false,
-    age_range: '3-8 years',
-    brand: 'EduPlay',
-    created_at: '2024-01-08',
-    updated_at: '2024-01-08',
-  },
-  {
-    id: '3',
-    name: 'Remote Control Racing Car',
-    slug: 'rc-racing-car',
-    description: 'High-speed RC car',
-    price: 39.99,
-    compare_price: 49.99,
-    category_id: 'vehicles',
-    images: [],
-    stock: 8,
-    featured: true,
-    is_new: true,
-    age_range: '8+ years',
-    brand: 'SpeedKing',
-    created_at: '2024-01-05',
-    updated_at: '2024-01-05',
-  },
-];
+import ProductFormModal from '@/components/ProductFormModal';
 
 type Tab = 'dashboard' | 'products' | 'orders' | 'settings';
 
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [activeTab, setActiveTab] = useState<Tab>('products');
   const [searchQuery, setSearchQuery] = useState('');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Fetch products
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/products');
+      const data = await response.json();
+      setProducts(data.products || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch categories
+  const fetchCategories = async () => {
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data } = await supabase.from('categories').select('id, name, slug').order('name');
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, []);
+
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+
+    try {
+      const response = await fetch(`/api/products?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        fetchProducts();
+      } else {
+        alert('Failed to delete product');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Failed to delete product');
+    }
+  };
+
+  const handleModalSuccess = () => {
+    fetchProducts();
+  };
+
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const stats = {
+    totalRevenue: products.reduce((sum, p) => sum + p.price * (p.stock || 0), 0),
+    totalOrders: 0,
+    totalProducts: products.length,
+    totalCustomers: 0,
+  };
 
   const statusColors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-700',
@@ -154,12 +177,11 @@ export default function AdminPage() {
                   <div className="p-3 bg-jungle-100 rounded-xl">
                     <TrendingUp className="h-6 w-6 text-jungle-600" />
                   </div>
-                  <span className="text-sm text-green-600 font-medium">+12.5%</span>
                 </div>
                 <p className="text-2xl font-bold text-gray-900">
                   {formatPrice(stats.totalRevenue)}
                 </p>
-                <p className="text-gray-500 text-sm">Total Revenue</p>
+                <p className="text-gray-500 text-sm">Total Inventory Value</p>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -167,7 +189,6 @@ export default function AdminPage() {
                   <div className="p-3 bg-tiger-100 rounded-xl">
                     <ShoppingCart className="h-6 w-6 text-tiger-600" />
                   </div>
-                  <span className="text-sm text-green-600 font-medium">+8.2%</span>
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
                 <p className="text-gray-500 text-sm">Total Orders</p>
@@ -188,65 +209,39 @@ export default function AdminPage() {
                   <div className="p-3 bg-banana-100 rounded-xl">
                     <Users className="h-6 w-6 text-banana-600" />
                   </div>
-                  <span className="text-sm text-green-600 font-medium">+5.3%</span>
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{stats.totalCustomers}</p>
                 <p className="text-gray-500 text-sm">Customers</p>
               </div>
             </div>
 
-            {/* Recent Orders */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
-                <h2 className="font-display text-lg font-bold">Recent Orders</h2>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Order ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Customer
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Total
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {recentOrders.map((order) => (
-                      <tr key={order.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 font-mono text-sm">{order.id}</td>
-                        <td className="px-6 py-4">{order.customer}</td>
-                        <td className="px-6 py-4 font-semibold">{formatPrice(order.total)}</td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${statusColors[order.status]}`}
-                          >
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-gray-500 text-sm">{order.date}</td>
-                        <td className="px-6 py-4">
-                          <button className="text-jungle-600 hover:text-jungle-700">
-                            <Eye className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="font-display text-lg font-bold mb-4">Quick Actions</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <button
+                  onClick={handleAddProduct}
+                  className="p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-jungle-500 hover:bg-jungle-50 transition-colors text-left"
+                >
+                  <Plus className="h-6 w-6 text-jungle-600 mb-2" />
+                  <h3 className="font-semibold text-gray-900">Add Product</h3>
+                  <p className="text-sm text-gray-500">Add a new toy to your store</p>
+                </button>
+                <button
+                  onClick={() => setActiveTab('products')}
+                  className="p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-jungle-500 hover:bg-jungle-50 transition-colors text-left"
+                >
+                  <Package className="h-6 w-6 text-jungle-600 mb-2" />
+                  <h3 className="font-semibold text-gray-900">Manage Products</h3>
+                  <p className="text-sm text-gray-500">Edit prices and stock levels</p>
+                </button>
+                <button
+                  onClick={() => setActiveTab('orders')}
+                  className="p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-jungle-500 hover:bg-jungle-50 transition-colors text-left"
+                >
+                  <ShoppingCart className="h-6 w-6 text-jungle-600 mb-2" />
+                  <h3 className="font-semibold text-gray-900">View Orders</h3>
+                  <p className="text-sm text-gray-500">Process customer orders</p>
+                </button>
               </div>
             </div>
           </div>
@@ -267,162 +262,145 @@ export default function AdminPage() {
                 />
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
-              <button className="btn-jungle flex items-center gap-2">
+              <button onClick={handleAddProduct} className="btn-jungle flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 Add Product
               </button>
             </div>
 
             {/* Products Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Product
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Price
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Stock
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Category
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {sampleProducts.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-jungle-100 rounded-xl flex items-center justify-center">
-                              🧸
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{product.name}</p>
-                              <p className="text-sm text-gray-500">{product.brand}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <p className="font-semibold">{formatPrice(product.price)}</p>
-                          {product.compare_price && (
-                            <p className="text-sm text-gray-400 line-through">
-                              {formatPrice(product.compare_price)}
-                            </p>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`font-medium ${product.stock <= 5 ? 'text-red-600' : 'text-gray-900'}`}
-                          >
-                            {product.stock}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600 capitalize">
-                          {product.category_id.replace('-', ' ')}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            {product.featured && (
-                              <span className="bg-jungle-100 text-jungle-700 text-xs px-2 py-1 rounded-full">
-                                Featured
-                              </span>
-                            )}
-                            {product.is_new && (
-                              <span className="bg-parrot-100 text-parrot-700 text-xs px-2 py-1 rounded-full">
-                                New
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <button className="p-2 hover:bg-jungle-100 rounded-lg text-jungle-600">
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button className="p-2 hover:bg-red-100 rounded-lg text-red-600">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 text-jungle-600 animate-spin" />
               </div>
-            </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No products yet</h3>
+                <p className="text-gray-500 mb-6">
+                  {searchQuery
+                    ? 'No products match your search'
+                    : 'Get started by adding your first product'}
+                </p>
+                {!searchQuery && (
+                  <button onClick={handleAddProduct} className="btn-jungle inline-flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Your First Product
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Product
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Price
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Stock
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Category
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {filteredProducts.map((product) => (
+                        <tr key={product.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 bg-jungle-100 rounded-xl flex items-center justify-center overflow-hidden">
+                                {product.images?.[0] ? (
+                                  <img
+                                    src={product.images[0]}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-2xl">🧸</span>
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">{product.name}</p>
+                                <p className="text-sm text-gray-500">{product.brand || 'No brand'}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="font-semibold">{formatPrice(product.price)}</p>
+                            {product.compare_price && (
+                              <p className="text-sm text-gray-400 line-through">
+                                {formatPrice(product.compare_price)}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`font-medium ${product.stock <= 5 ? 'text-red-600' : 'text-gray-900'}`}
+                            >
+                              {product.stock}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600 capitalize">
+                            {categories.find((c) => c.id === product.category_id)?.name || 'Unknown'}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-2">
+                              {product.featured && (
+                                <span className="bg-jungle-100 text-jungle-700 text-xs px-2 py-1 rounded-full">
+                                  Featured
+                                </span>
+                              )}
+                              {product.is_new && (
+                                <span className="bg-parrot-100 text-parrot-700 text-xs px-2 py-1 rounded-full">
+                                  New
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleEditProduct(product)}
+                                className="p-2 hover:bg-jungle-100 rounded-lg text-jungle-600"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProduct(product.id)}
+                                className="p-2 hover:bg-red-100 rounded-lg text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Orders Tab */}
         {activeTab === 'orders' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-6 border-b border-gray-100">
-              <h2 className="font-display text-lg font-bold">All Orders</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                      Order ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                      Customer
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                      Total
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {recentOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 font-mono text-sm">{order.id}</td>
-                      <td className="px-6 py-4">{order.customer}</td>
-                      <td className="px-6 py-4 font-semibold">{formatPrice(order.total)}</td>
-                      <td className="px-6 py-4">
-                        <select
-                          defaultValue={order.status}
-                          className="text-sm border border-gray-200 rounded-lg px-2 py-1"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="paid">Paid</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 text-gray-500 text-sm">{order.date}</td>
-                      <td className="px-6 py-4">
-                        <button className="text-jungle-600 hover:text-jungle-700">
-                          <Eye className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+            <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No orders yet</h3>
+            <p className="text-gray-500">Orders will appear here when customers make purchases</p>
           </div>
         )}
 
@@ -436,29 +414,32 @@ export default function AdminPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Store Name
                   </label>
-                  <input type="text" defaultValue="JungleeToys" />
+                  <input
+                    type="text"
+                    defaultValue="JungleeToys"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Support Email
                   </label>
-                  <input type="email" defaultValue="hello@jungleetoys.com" />
+                  <input
+                    type="email"
+                    defaultValue="hello@jungleetoys.com"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Currency
-                  </label>
-                  <select defaultValue="GBP">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                  <select
+                    defaultValue="GBP"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                  >
                     <option value="GBP">GBP (£)</option>
                     <option value="EUR">EUR (€)</option>
                     <option value="USD">USD ($)</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Free Shipping Threshold
-                  </label>
-                  <input type="number" defaultValue="50" />
                 </div>
                 <button className="btn-jungle mt-4">Save Settings</button>
               </div>
@@ -466,6 +447,15 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      {/* Product Form Modal */}
+      <ProductFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleModalSuccess}
+        product={editingProduct}
+        categories={categories}
+      />
     </div>
   );
 }

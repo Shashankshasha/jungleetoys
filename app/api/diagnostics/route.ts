@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const diagnostics = {
+  const diagnostics: {
+    timestamp: string;
+    environmentVariables: Record<string, string>;
+    supabaseUrlPreview: string;
+    supabaseConnection?: string;
+  } = {
     timestamp: new Date().toISOString(),
     environmentVariables: {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Missing',

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 
+// Force Node.js runtime (not Edge)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 // GET /api/settings - Fetch store settings
 export async function GET() {
   try {
@@ -61,4 +65,10 @@ export async function PUT(req: NextRequest) {
     console.error('Update settings error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+// PATCH /api/settings - Alternative update method
+export async function PATCH(req: NextRequest) {
+  // Use the same logic as PUT
+  return PUT(req);
 }

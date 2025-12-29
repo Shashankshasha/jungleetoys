@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingCart,
@@ -29,9 +29,25 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const { totalItems, openCart } = useCart();
 
   const itemCount = totalItems();
+
+  // Check if user is an admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await fetch('/api/admin/me');
+        if (response.ok) {
+          setIsAdmin(true);
+        }
+      } catch (error) {
+        // Not an admin - do nothing
+      }
+    };
+    checkAdminStatus();
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm">
@@ -147,14 +163,16 @@ export default function Navbar() {
               Sale 🔥
             </Link>
 
-            {/* Account */}
-            <Link
-              href="/admin"
-              className="flex items-center gap-1 font-semibold text-gray-700 hover:text-jungle-600 transition-colors"
-            >
-              <User className="h-5 w-5" />
-              Admin
-            </Link>
+            {/* Admin Link - Only visible to authenticated admins */}
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-1 font-semibold text-gray-700 hover:text-jungle-600 transition-colors"
+              >
+                <User className="h-5 w-5" />
+                Admin
+              </Link>
+            )}
 
             {/* Cart Button */}
             <button
@@ -264,13 +282,16 @@ export default function Navbar() {
                 >
                   Sale 🔥
                 </Link>
-                <Link
-                  href="/admin"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-2 font-medium text-gray-700 hover:bg-jungle-50 rounded-xl"
-                >
-                  Admin Dashboard
-                </Link>
+                {/* Admin Link - Only visible to authenticated admins */}
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-2 font-medium text-gray-700 hover:bg-jungle-50 rounded-xl"
+                  >
+                    Admin Dashboard
+                  </Link>
+                )}
               </div>
             </motion.div>
           )}

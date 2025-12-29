@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -18,122 +18,66 @@ import {
   Tag,
 } from 'lucide-react';
 import { useCart, formatPrice } from '@/lib/cart';
-import { Product } from '@/lib/supabase';
+import { Product, supabase } from '@/lib/supabase';
 import ProductCard from '@/components/ProductCard';
 import MakeOfferModal from '@/components/MakeOfferModal';
 
-// Sample product data - in production, fetch from Supabase using slug
-const getProductBySlug = (slug: string): Product | null => {
-  const products: Product[] = [
-    {
-      id: '1',
-      name: 'Super Hero Action Figure Set',
-      slug: 'super-hero-action-figure-set',
-      description: `Unleash the power of imagination with this amazing Super Hero Action Figure Set! 
-
-This incredible collection includes 6 highly detailed action figures, each standing 15cm tall with multiple points of articulation. Perfect for creative play and displaying.
-
-**What's Included:**
-- 6 unique super hero figures
-- 12 interchangeable accessories
-- Display stand
-- Collector's guide
-
-**Features:**
-- Premium quality materials
-- Non-toxic and child-safe paints
-- Durable construction for active play
-- Authentic character details`,
-      price: 24.99,
-      compare_price: 34.99,
-      category_id: 'action-figures',
-      images: [],
-      stock: 15,
-      featured: true,
-      is_new: true,
-      age_range: '5-12 years',
-      brand: 'HeroWorld',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  ];
-  return products.find(p => p.slug === slug) || products[0];
-};
-
-const relatedProducts: Product[] = [
-  {
-    id: '7',
-    name: 'Dinosaur World Playset',
-    slug: 'dinosaur-world-playset',
-    description: '12 realistic dinosaur figures with playmat',
-    price: 22.99,
-    category_id: 'action-figures',
-    images: [],
-    stock: 18,
-    featured: true,
-    is_new: false,
-    age_range: '4-10 years',
-    brand: 'DinoLand',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    name: 'Remote Control Racing Car',
-    slug: 'rc-racing-car',
-    description: 'High-speed RC car with rechargeable battery',
-    price: 39.99,
-    compare_price: 49.99,
-    category_id: 'vehicles',
-    images: [],
-    stock: 8,
-    featured: true,
-    is_new: true,
-    age_range: '8+ years',
-    brand: 'SpeedKing',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    name: 'Wooden Building Blocks (100 pcs)',
-    slug: 'wooden-building-blocks-100',
-    description: 'Educational wooden blocks in various shapes and colors',
-    price: 29.99,
-    category_id: 'building-blocks',
-    images: [],
-    stock: 25,
-    featured: true,
-    is_new: false,
-    age_range: '3-8 years',
-    brand: 'EduPlay',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    name: 'Cuddly Teddy Bear XL',
-    slug: 'cuddly-teddy-bear-xl',
-    description: 'Super soft and huggable teddy bear, 60cm tall',
-    price: 19.99,
-    category_id: 'dolls-plush',
-    images: [],
-    stock: 30,
-    featured: true,
-    is_new: false,
-    age_range: '0-99 years',
-    brand: 'CuddlePals',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
 export default function ProductPage({ params }: { params: { slug: string } }) {
-  const product = getProductBySlug(params.slug);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const { addItem } = useCart();
+
+  // Fetch product and related products from Supabase
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch main product by slug
+        const { data: productData, error: productError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('slug', params.slug)
+          .single();
+
+        if (productError) throw productError;
+        setProduct(productData);
+
+        // Fetch related products (same category or featured)
+        if (productData) {
+          const { data: relatedData } = await supabase
+            .from('products')
+            .select('*')
+            .neq('id', productData.id)
+            .eq('category_id', productData.category_id)
+            .limit(4);
+
+          setRelatedProducts(relatedData || []);
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [params.slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-jungle-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (

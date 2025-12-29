@@ -18,6 +18,11 @@ import {
   Home,
   Loader2,
   LogOut,
+  Tag,
+  Check,
+  X,
+  Mail,
+  Phone,
 } from 'lucide-react';
 import { formatPrice } from '@/lib/cart';
 import { Product } from '@/lib/supabase';
@@ -145,6 +150,41 @@ export default function AdminPage() {
     }
   };
 
+  // Fetch offers
+  const fetchOffers = async () => {
+    try {
+      setOffersLoading(true);
+      const response = await fetch(`/api/offers?status=${offersFilter}`);
+      if (response.ok) {
+        const data = await response.json();
+        setOffers(data.offers || []);
+      }
+    } catch (error) {
+      console.error('Error fetching offers:', error);
+    } finally {
+      setOffersLoading(false);
+    }
+  };
+
+  // Update offer status
+  const updateOfferStatus = async (offerId: string, status: string) => {
+    try {
+      const response = await fetch('/api/offers', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: offerId, status }),
+      });
+
+      if (response.ok) {
+        fetchOffers();
+        alert(`Offer ${status} successfully!`);
+      }
+    } catch (error) {
+      console.error('Error updating offer:', error);
+      alert('Failed to update offer');
+    }
+  };
+
   // Check authentication
   const checkAuth = async () => {
     try {
@@ -185,8 +225,18 @@ export default function AdminPage() {
       fetchProducts();
       fetchCategories();
       fetchSettings();
+      if (activeTab === 'offers') {
+        fetchOffers();
+      }
     }
   }, [isAuthenticated]);
+
+  // Fetch offers when filter changes or tab becomes active
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'offers') {
+      fetchOffers();
+    }
+  }, [offersFilter, activeTab]);
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -293,11 +343,12 @@ export default function AdminPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
-        <div className="flex gap-2 mb-8 border-b border-gray-200 pb-4">
+        <div className="flex gap-2 mb-8 border-b border-gray-200 pb-4 overflow-x-auto">
           {[
             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
             { id: 'products', label: 'Products', icon: Package },
             { id: 'orders', label: 'Orders', icon: ShoppingCart },
+            { id: 'offers', label: 'Offers', icon: Tag },
             { id: 'settings', label: 'Settings', icon: Settings },
           ].map((tab) => (
             <button
@@ -548,6 +599,139 @@ export default function AdminPage() {
             <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No orders yet</h3>
             <p className="text-gray-500">Orders will appear here when customers make purchases</p>
+          </div>
+        )}
+
+        {/* Offers Tab */}
+        {activeTab === 'offers' && (
+          <div className="space-y-6">
+            {/* Filter Buttons */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+              <div className="flex gap-2 overflow-x-auto">
+                {['all', 'pending', 'approved', 'contacted', 'rejected'].map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setOffersFilter(filter)}
+                    className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                      offersFilter === filter
+                        ? 'bg-jungle-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Offers List */}
+            {offersLoading ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <Loader2 className="h-12 w-12 text-jungle-600 animate-spin mx-auto mb-4" />
+                <p className="text-gray-600">Loading offers...</p>
+              </div>
+            ) : offers.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <Tag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No {offersFilter !== 'all' ? offersFilter : ''} offers yet
+                </h3>
+                <p className="text-gray-500">Customer offers will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {offers.map((offer) => (
+                  <div
+                    key={offer.id}
+                    className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Product Info */}
+                      <div className="flex gap-4">
+                        {offer.products.images && offer.products.images[0] && (
+                          <img
+                            src={offer.products.images[0]}
+                            alt={offer.products.name}
+                            className="w-20 h-20 object-cover rounded-lg"
+                          />
+                        )}
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{offer.products.name}</h3>
+                          <p className="text-sm text-gray-600">
+                            Price: {formatPrice(offer.products.price)}
+                          </p>
+                          <p className="text-lg font-bold text-jungle-600">
+                            Offer: {formatPrice(offer.offer_amount)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Customer Info */}
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-2">Customer</h4>
+                        <div className="space-y-1 text-sm">
+                          <p>{offer.customer_name}</p>
+                          <p>
+                            <a href={`mailto:${offer.customer_email}`} className="text-jungle-600 hover:underline">
+                              {offer.customer_email}
+                            </a>
+                          </p>
+                          {offer.customer_phone && (
+                            <p>
+                              <a href={`tel:${offer.customer_phone}`} className="text-jungle-600 hover:underline">
+                                {offer.customer_phone}
+                              </a>
+                            </p>
+                          )}
+                          {offer.message && (
+                            <p className="text-gray-600 mt-2 italic text-xs">"{offer.message}"</p>
+                          )}
+                          <p className="text-xs text-gray-500 mt-2">
+                            {new Date(offer.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-col gap-2">
+                        <div className={`px-3 py-1 rounded-full text-xs font-semibold w-fit ${
+                          offer.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                          offer.status === 'approved' ? 'bg-green-100 text-green-700' :
+                          offer.status === 'contacted' ? 'bg-blue-100 text-blue-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {offer.status.toUpperCase()}
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <button
+                            onClick={() => updateOfferStatus(offer.id, 'approved')}
+                            className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
+                          >
+                            <Check className="h-4 w-4" />
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => updateOfferStatus(offer.id, 'contacted')}
+                            className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+                          >
+                            <Mail className="h-4 w-4" />
+                            Contacted
+                          </button>
+                          <button
+                            onClick={() => updateOfferStatus(offer.id, 'rejected')}
+                            className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

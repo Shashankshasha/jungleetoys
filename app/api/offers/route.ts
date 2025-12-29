@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/auth';
+import { sendOfferApprovalEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
 
@@ -136,6 +137,29 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // Fetch the current offer with product details before updating
+    const { data: currentOffer, error: fetchError } = await supabaseAdmin
+      .from('product_offers')
+      .select(`
+        *,
+        products (
+          id,
+          name,
+          price,
+          images
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !currentOffer) {
+      console.error('Error fetching offer:', fetchError);
+      return NextResponse.json(
+        { error: 'Offer not found' },
+        { status: 404 }
+      );
+    }
+
     const updateData: any = {
       updated_at: new Date().toISOString(),
     };
@@ -161,6 +185,37 @@ export async function PATCH(req: NextRequest) {
         { error: 'Failed to update offer' },
         { status: 500 }
       );
+    }
+
+    // Send email notification if offer was approved
+    if (status === 'approved') {
+      try {
+        // Fetch store settings for email details
+        const { data: settings } = await supabaseAdmin
+          .from('store_settings')
+          .select('store_name, support_email')
+          .eq('id', '00000000-0000-0000-0000-000000000001')
+          .single();
+
+        const storeName = settings?.store_name || 'JungleeToys';
+        const supportEmail = settings?.support_email || 'support@jungleetoys.com';
+
+        await sendOfferApprovalEmail({
+          customerName: currentOffer.customer_name,
+          customerEmail: currentOffer.customer_email,
+          productName: currentOffer.products.name,
+          productPrice: currentOffer.products.price,
+          offerAmount: currentOffer.offer_amount,
+          productImage: currentOffer.products.images?.[0],
+          storeName,
+          supportEmail,
+        });
+
+        console.log(`Approval email sent to ${currentOffer.customer_email}`);
+      } catch (emailError) {
+        // Log error but don't fail the request
+        console.error('Error sending approval email:', emailError);
+      }
     }
 
     return NextResponse.json({ offer: data });

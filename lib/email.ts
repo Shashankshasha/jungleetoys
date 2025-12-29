@@ -1,6 +1,4 @@
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from 'nodemailer';
 
 interface OfferApprovalEmailData {
   customerName: string;
@@ -12,6 +10,19 @@ interface OfferApprovalEmailData {
   storeName: string;
   supportEmail: string;
 }
+
+// Create SMTP transporter using Hostinger email
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.hostinger.com',
+    port: parseInt(process.env.SMTP_PORT || '465'),
+    secure: true, // use SSL
+    auth: {
+      user: process.env.SMTP_USER, // grace@jungleetoys.com
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
+};
 
 export async function sendOfferApprovalEmail(data: OfferApprovalEmailData) {
   const {
@@ -140,14 +151,20 @@ export async function sendOfferApprovalEmail(data: OfferApprovalEmailData) {
   `.trim();
 
   try {
-    const response = await resend.emails.send({
-      from: `${storeName} <noreply@jungleetoys.com>`,
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: `"${storeName}" <${process.env.SMTP_USER}>`, // grace@jungleetoys.com
       to: customerEmail,
+      replyTo: supportEmail, // This allows customer to reply to grace@jungleetoys.com
       subject: `🎉 Your offer for ${productName} has been approved!`,
       html: emailHtml,
-    });
+    };
 
-    return { success: true, data: response };
+    const info = await transporter.sendMail(mailOptions);
+
+    console.log('Email sent successfully:', info.messageId);
+    return { success: true, data: info };
   } catch (error) {
     console.error('Error sending offer approval email:', error);
     return { success: false, error };

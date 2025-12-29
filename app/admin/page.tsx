@@ -23,7 +23,7 @@ import { formatPrice } from '@/lib/cart';
 import { Product } from '@/lib/supabase';
 import ProductFormModal from '@/components/ProductFormModal';
 
-type Tab = 'dashboard' | 'products' | 'orders' | 'settings';
+type Tab = 'dashboard' | 'products' | 'orders' | 'offers' | 'settings';
 
 interface Category {
   id: string;
@@ -35,6 +35,25 @@ interface Admin {
   id: string;
   email: string;
   name: string;
+}
+
+interface Offer {
+  id: string;
+  product_id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
+  offer_amount: number;
+  message: string | null;
+  status: 'pending' | 'approved' | 'rejected' | 'contacted';
+  admin_notes: string | null;
+  created_at: string;
+  products: {
+    id: string;
+    name: string;
+    price: number;
+    images: string[];
+  };
 }
 
 export default function AdminPage() {
@@ -52,6 +71,9 @@ export default function AdminPage() {
   const [settings, setSettings] = useState<any>(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [offersLoading, setOffersLoading] = useState(false);
+  const [offersFilter, setOffersFilter] = useState<string>('all');
 
   // Fetch products
   const fetchProducts = async () => {

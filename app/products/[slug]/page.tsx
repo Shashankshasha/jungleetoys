@@ -15,10 +15,12 @@ import {
   Minus,
   Plus,
   ChevronRight,
+  Tag,
 } from 'lucide-react';
 import { useCart, formatPrice } from '@/lib/cart';
 import { Product } from '@/lib/supabase';
 import ProductCard from '@/components/ProductCard';
+import MakeOfferModal from '@/components/MakeOfferModal';
 
 // Sample product data - in production, fetch from Supabase using slug
 const getProductBySlug = (slug: string): Product | null => {
@@ -130,6 +132,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const product = getProductBySlug(params.slug);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const { addItem } = useCart();
 
   if (!product) {
@@ -322,11 +325,20 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
               </button>
 
               {/* Wishlist */}
-              <button className="p-4 border-2 border-jungle-200 hover:border-red-400 
+              <button className="p-4 border-2 border-jungle-200 hover:border-red-400
                                hover:bg-red-50 rounded-xl transition-colors">
                 <Heart className="h-6 w-6" />
               </button>
             </div>
+
+            {/* Make an Offer */}
+            <button
+              onClick={() => setIsOfferModalOpen(true)}
+              className="w-full btn-outline-jungle flex items-center justify-center gap-2 py-3"
+            >
+              <Tag className="h-5 w-5" />
+              Make an Offer
+            </button>
 
             {/* Stock Warning */}
             {product.stock <= 5 && product.stock > 0 && (
@@ -396,6 +408,13 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
           </div>
         </section>
       </div>
+
+      {/* Make an Offer Modal */}
+      <MakeOfferModal
+        isOpen={isOfferModalOpen}
+        onClose={() => setIsOfferModalOpen(false)}
+        product={product}
+      />
     </div>
   );
 }

@@ -21,7 +21,7 @@ export async function GET() {
   }
 }
 
-// PUT /api/settings - Update store settings
+// PUT /api/settings - Update store settings (admin only)
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();

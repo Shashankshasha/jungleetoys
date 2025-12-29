@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { requireAdminAuth } from '@/lib/auth';
 
 // Force Node.js runtime (not Edge)
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// GET /api/settings - Fetch store settings
+// GET /api/settings - Fetch store settings (public)
 export async function GET() {
   try {
     const { data, error } = await supabase
@@ -27,6 +28,12 @@ export async function GET() {
 
 // PUT /api/settings - Update store settings (admin only)
 export async function PUT(req: NextRequest) {
+  // Require admin authentication
+  const authResult = await requireAdminAuth(req);
+  if (authResult instanceof Response) {
+    return authResult; // Return 401 if not authenticated
+  }
+
   try {
     const body = await req.json();
 

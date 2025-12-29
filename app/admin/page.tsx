@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Package,
@@ -16,6 +17,7 @@ import {
   Settings,
   Home,
   Loader2,
+  LogOut,
 } from 'lucide-react';
 import { formatPrice } from '@/lib/cart';
 import { Product } from '@/lib/supabase';
@@ -29,7 +31,17 @@ interface Category {
   slug: string;
 }
 
+interface Admin {
+  id: string;
+  email: string;
+  name: string;
+}
+
 export default function AdminPage() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [admin, setAdmin] = useState<Admin | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('products');
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
@@ -111,11 +123,48 @@ export default function AdminPage() {
     }
   };
 
+  // Check authentication
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/admin/me');
+      if (response.ok) {
+        const data = await response.json();
+        setAdmin(data.admin);
+        setIsAuthenticated(true);
+      } else {
+        router.push('/admin/login');
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      router.push('/admin/login');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Logout function
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+      router.push('/admin/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  // Check auth on mount
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-    fetchSettings();
+    checkAuth();
   }, []);
+
+  // Fetch data only when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProducts();
+      fetchCategories();
+      fetchSettings();
+    }
+  }, [isAuthenticated]);
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -169,6 +218,23 @@ export default function AdminPage() {
     cancelled: 'bg-red-100 text-red-700',
   };
 
+  // Show loading screen while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 text-jungle-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Verifying authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Admin Header */}
@@ -177,14 +243,28 @@ export default function AdminPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h1 className="font-display text-xl font-bold">🌴 JungleeToys Admin</h1>
+              {admin && (
+                <span className="text-sm text-jungle-200">
+                  Welcome, {admin.name}
+                </span>
+              )}
             </div>
-            <Link
-              href="/"
-              className="flex items-center gap-2 text-jungle-200 hover:text-white transition-colors"
-            >
-              <Home className="h-4 w-4" />
-              View Store
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className="flex items-center gap-2 text-jungle-200 hover:text-white transition-colors"
+              >
+                <Home className="h-4 w-4" />
+                View Store
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-jungle-200 hover:text-white transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>

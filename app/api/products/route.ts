@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { requireAdminAuth } from '@/lib/auth';
 
 // GET /api/products - Fetch all products with optional filters
 export async function GET(req: NextRequest) {
@@ -62,6 +63,12 @@ export async function GET(req: NextRequest) {
 
 // POST /api/products - Create a new product (admin only)
 export async function POST(req: NextRequest) {
+  // Require admin authentication
+  const authResult = await requireAdminAuth(req);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+
   try {
     const body = await req.json();
 
@@ -108,6 +115,12 @@ export async function POST(req: NextRequest) {
 
 // PUT /api/products - Update a product (admin only)
 export async function PUT(req: NextRequest) {
+  // Require admin authentication
+  const authResult = await requireAdminAuth(req);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+
   try {
     const body = await req.json();
     const { id, ...updates } = body;
@@ -141,6 +154,12 @@ export async function PUT(req: NextRequest) {
 
 // DELETE /api/products - Delete a product (admin only)
 export async function DELETE(req: NextRequest) {
+  // Require admin authentication
+  const authResult = await requireAdminAuth(req);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

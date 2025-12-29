@@ -62,9 +62,15 @@ body {
   }
 
   .btn-jungle {
-    @apply bg-gradient-to-r from-jungle-500 to-jungle-600 text-white font-semibold 
-           px-6 py-3 rounded-full shadow-lg shadow-jungle-500/30 
-           hover:shadow-xl hover:shadow-jungle-500/40 hover:scale-105 
+    @apply bg-gradient-to-r from-jungle-500 to-jungle-600 text-white font-semibold
+           px-6 py-3 rounded-full shadow-lg shadow-jungle-500/30
+           hover:shadow-xl hover:shadow-jungle-500/40 hover:scale-105
+           transition-all duration-300 active:scale-95;
+  }
+
+  .btn-outline-jungle {
+    @apply border-2 border-jungle-500 text-jungle-600 font-semibold
+           px-6 py-3 rounded-full hover:bg-jungle-50
            transition-all duration-300 active:scale-95;
   }
 

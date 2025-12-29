@@ -1,211 +1,11 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo, Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, SlidersHorizontal, X, ChevronDown, Search, Grid3X3, LayoutList } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
-import { Product } from '@/lib/supabase';
-
-// Sample products - in production, this would come from Supabase
-const allProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Super Hero Action Figure Set',
-    slug: 'super-hero-action-figure-set',
-    description: 'Amazing collection of 6 super hero action figures with accessories',
-    price: 24.99,
-    compare_price: 34.99,
-    category_id: 'action-figures',
-    images: [],
-    stock: 15,
-    featured: true,
-    is_new: true,
-    age_range: '5-12 years',
-    brand: 'HeroWorld',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    name: 'Wooden Building Blocks (100 pcs)',
-    slug: 'wooden-building-blocks-100',
-    description: 'Educational wooden blocks in various shapes and colors',
-    price: 29.99,
-    category_id: 'building-blocks',
-    images: [],
-    stock: 25,
-    featured: true,
-    is_new: false,
-    age_range: '3-8 years',
-    brand: 'EduPlay',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    name: 'Remote Control Racing Car',
-    slug: 'rc-racing-car',
-    description: 'High-speed RC car with rechargeable battery',
-    price: 39.99,
-    compare_price: 49.99,
-    category_id: 'vehicles',
-    images: [],
-    stock: 8,
-    featured: true,
-    is_new: true,
-    age_range: '8+ years',
-    brand: 'SpeedKing',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    name: 'Cuddly Teddy Bear XL',
-    slug: 'cuddly-teddy-bear-xl',
-    description: 'Super soft and huggable teddy bear, 60cm tall',
-    price: 19.99,
-    category_id: 'dolls-plush',
-    images: [],
-    stock: 30,
-    featured: true,
-    is_new: false,
-    age_range: '0-99 years',
-    brand: 'CuddlePals',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '5',
-    name: 'Science Experiment Kit',
-    slug: 'science-experiment-kit',
-    description: '50+ experiments to explore physics and chemistry',
-    price: 34.99,
-    category_id: 'educational',
-    images: [],
-    stock: 12,
-    featured: false,
-    is_new: true,
-    age_range: '8-14 years',
-    brand: 'ScienceWiz',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '6',
-    name: 'Princess Dress-Up Set',
-    slug: 'princess-dress-up-set',
-    description: 'Beautiful princess costume with tiara and accessories',
-    price: 27.99,
-    compare_price: 35.99,
-    category_id: 'dolls-plush',
-    images: [],
-    stock: 20,
-    featured: false,
-    is_new: false,
-    age_range: '3-8 years',
-    brand: 'FairyTale',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '7',
-    name: 'Dinosaur World Playset',
-    slug: 'dinosaur-world-playset',
-    description: '12 realistic dinosaur figures with playmat',
-    price: 22.99,
-    category_id: 'action-figures',
-    images: [],
-    stock: 18,
-    featured: true,
-    is_new: false,
-    age_range: '4-10 years',
-    brand: 'DinoLand',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '8',
-    name: 'Musical Learning Tablet',
-    slug: 'musical-learning-tablet',
-    description: 'Interactive tablet with songs, games and learning activities',
-    price: 44.99,
-    category_id: 'educational',
-    images: [],
-    stock: 5,
-    featured: true,
-    is_new: true,
-    age_range: '2-5 years',
-    brand: 'LearnFun',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '9',
-    name: 'Chess & Checkers Set',
-    slug: 'chess-checkers-set',
-    description: 'Classic wooden chess and checkers combo set',
-    price: 24.99,
-    category_id: 'board-games',
-    images: [],
-    stock: 22,
-    featured: false,
-    is_new: false,
-    age_range: '6+ years',
-    brand: 'GameMaster',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '10',
-    name: 'Art Studio Deluxe Kit',
-    slug: 'art-studio-deluxe-kit',
-    description: 'Complete art set with paints, brushes, and canvas',
-    price: 32.99,
-    category_id: 'arts-crafts',
-    images: [],
-    stock: 15,
-    featured: false,
-    is_new: true,
-    age_range: '5-12 years',
-    brand: 'CreativeKids',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '11',
-    name: 'Football Goal Set',
-    slug: 'football-goal-set',
-    description: 'Portable football goal with ball and pump',
-    price: 29.99,
-    category_id: 'outdoor',
-    images: [],
-    stock: 10,
-    featured: false,
-    is_new: false,
-    age_range: '5+ years',
-    brand: 'SportyKids',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '12',
-    name: 'LEGO-Style Spaceship',
-    slug: 'lego-style-spaceship',
-    description: '500+ piece building set for space enthusiasts',
-    price: 49.99,
-    compare_price: 59.99,
-    category_id: 'building-blocks',
-    images: [],
-    stock: 7,
-    featured: true,
-    is_new: true,
-    age_range: '8-14 years',
-    brand: 'BuildIt',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+import { Product, supabase } from '@/lib/supabase';
 
 const categories = [
   { id: 'action-figures', name: 'Action Figures', emoji: '🦸' },
@@ -236,6 +36,10 @@ const sortOptions = [
 function ProductsContent() {
   const searchParams = useSearchParams();
 
+  // Product state
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
@@ -246,6 +50,28 @@ function ProductsContent() {
   const [sortBy, setSortBy] = useState('featured');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Fetch products from Supabase
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setAllProducts(data || []);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // URL param filters
   const filterParam = searchParams.get('filter');
@@ -328,6 +154,17 @@ function ProductsContent() {
 
   const activeFilterCount =
     selectedCategories.length + selectedAges.length + (selectedPriceRange ? 1 : 0);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-jungle-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-jungle-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-jungle-50">

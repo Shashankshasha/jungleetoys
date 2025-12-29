@@ -37,6 +37,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [settings, setSettings] = useState<any>(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsSaved, setSettingsSaved] = useState(false);
 
   // Fetch products
   const fetchProducts = async () => {
@@ -67,9 +70,51 @@ export default function AdminPage() {
     }
   };
 
+  // Fetch settings
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch('/api/settings');
+      if (response.ok) {
+        const data = await response.json();
+        setSettings(data);
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
+
+  // Save settings
+  const saveSettings = async () => {
+    if (!settings) return;
+
+    setSettingsLoading(true);
+    setSettingsSaved(false);
+
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+
+      if (response.ok) {
+        setSettingsSaved(true);
+        setTimeout(() => setSettingsSaved(false), 3000);
+      } else {
+        alert('Failed to save settings');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save settings');
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    fetchSettings();
   }, []);
 
   const handleAddProduct = () => {
@@ -406,44 +451,226 @@ export default function AdminPage() {
 
         {/* Settings Tab */}
         {activeTab === 'settings' && (
-          <div className="max-w-2xl space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="font-display text-lg font-bold mb-6">Store Settings</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Store Name
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue="JungleeToys"
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Support Email
-                  </label>
-                  <input
-                    type="email"
-                    defaultValue="hello@jungleetoys.com"
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-                  <select
-                    defaultValue="GBP"
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
-                  >
-                    <option value="GBP">GBP (£)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="USD">USD ($)</option>
-                  </select>
-                </div>
-                <button className="btn-jungle mt-4">Save Settings</button>
+          <div className="max-w-3xl space-y-6">
+            {!settings ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 text-jungle-600 animate-spin" />
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Store Information */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="font-display text-lg font-bold mb-6">Store Information</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Store Name
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.store_name || ''}
+                        onChange={(e) => setSettings({ ...settings, store_name: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Support Email
+                        </label>
+                        <input
+                          type="email"
+                          value={settings.support_email || ''}
+                          onChange={(e) => setSettings({ ...settings, support_email: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone
+                        </label>
+                        <input
+                          type="tel"
+                          value={settings.phone || ''}
+                          onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                          placeholder="+44 20 1234 5678"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="font-display text-lg font-bold mb-6">Store Address</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Address Line 1
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.address_line1 || ''}
+                        onChange={(e) => setSettings({ ...settings, address_line1: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                        placeholder="123 Jungle Street"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Address Line 2
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.address_line2 || ''}
+                        onChange={(e) => setSettings({ ...settings, address_line2: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                        placeholder="Suite 100"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                        <input
+                          type="text"
+                          value={settings.city || ''}
+                          onChange={(e) => setSettings({ ...settings, city: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                          placeholder="London"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Postal Code
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.postal_code || ''}
+                          onChange={(e) => setSettings({ ...settings, postal_code: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                          placeholder="SW1A 1AA"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Country
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.country || ''}
+                          onChange={(e) => setSettings({ ...settings, country: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                          placeholder="United Kingdom"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Currency & Shipping */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="font-display text-lg font-bold mb-6">Currency & Shipping</h2>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Currency
+                        </label>
+                        <select
+                          value={settings.currency || 'GBP'}
+                          onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                        >
+                          <option value="GBP">GBP (£)</option>
+                          <option value="EUR">EUR (€)</option>
+                          <option value="USD">USD ($)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Free Shipping Threshold (£)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={settings.free_shipping_threshold || ''}
+                          onChange={(e) =>
+                            setSettings({ ...settings, free_shipping_threshold: parseFloat(e.target.value) })
+                          }
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                          placeholder="50.00"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Social Media */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="font-display text-lg font-bold mb-6">Social Media</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Facebook URL
+                      </label>
+                      <input
+                        type="url"
+                        value={settings.facebook_url || ''}
+                        onChange={(e) => setSettings({ ...settings, facebook_url: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                        placeholder="https://facebook.com/jungleetoys"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Instagram URL
+                      </label>
+                      <input
+                        type="url"
+                        value={settings.instagram_url || ''}
+                        onChange={(e) => setSettings({ ...settings, instagram_url: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                        placeholder="https://instagram.com/jungleetoys"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Twitter URL
+                      </label>
+                      <input
+                        type="url"
+                        value={settings.twitter_url || ''}
+                        onChange={(e) => setSettings({ ...settings, twitter_url: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                        placeholder="https://twitter.com/jungleetoys"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={saveSettings}
+                    disabled={settingsLoading}
+                    className="btn-jungle flex items-center gap-2"
+                  >
+                    {settingsLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Settings'
+                    )}
+                  </button>
+                  {settingsSaved && (
+                    <span className="text-green-600 font-medium">✓ Settings saved successfully!</span>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

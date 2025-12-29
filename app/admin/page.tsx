@@ -649,6 +649,173 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {/* Payment Settings */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="font-display text-lg font-bold mb-6">Payment Settings</h2>
+
+                  {/* Payment Methods */}
+                  <div className="mb-6">
+                    <h3 className="font-semibold text-gray-900 mb-4">Payment Methods</h3>
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.stripe_enabled || false}
+                          onChange={(e) => setSettings({ ...settings, stripe_enabled: e.target.checked })}
+                          className="w-4 h-4 text-jungle-600 rounded focus:ring-jungle-500"
+                        />
+                        <div>
+                          <span className="font-medium text-gray-900">Stripe</span>
+                          <p className="text-sm text-gray-500">Accept credit and debit cards</p>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.paypal_enabled || false}
+                          onChange={(e) => setSettings({ ...settings, paypal_enabled: e.target.checked })}
+                          className="w-4 h-4 text-jungle-600 rounded focus:ring-jungle-500"
+                        />
+                        <div>
+                          <span className="font-medium text-gray-900">PayPal</span>
+                          <p className="text-sm text-gray-500">Accept PayPal payments</p>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.cod_enabled || false}
+                          onChange={(e) => setSettings({ ...settings, cod_enabled: e.target.checked })}
+                          className="w-4 h-4 text-jungle-600 rounded focus:ring-jungle-500"
+                        />
+                        <div>
+                          <span className="font-medium text-gray-900">Cash on Delivery</span>
+                          <p className="text-sm text-gray-500">Accept payment on delivery</p>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.bank_transfer_enabled || false}
+                          onChange={(e) => setSettings({ ...settings, bank_transfer_enabled: e.target.checked })}
+                          className="w-4 h-4 text-jungle-600 rounded focus:ring-jungle-500"
+                        />
+                        <div>
+                          <span className="font-medium text-gray-900">Bank Transfer</span>
+                          <p className="text-sm text-gray-500">Accept direct bank transfers</p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Stripe Configuration */}
+                  {settings.stripe_enabled && (
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <h3 className="font-semibold text-gray-900 mb-4">Stripe Configuration</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Publishable Key
+                          </label>
+                          <input
+                            type="text"
+                            value={settings.stripe_publishable_key || ''}
+                            onChange={(e) => setSettings({ ...settings, stripe_publishable_key: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                            placeholder="pk_live_..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Secret Key
+                          </label>
+                          <input
+                            type="password"
+                            value={settings.stripe_secret_key || ''}
+                            onChange={(e) => setSettings({ ...settings, stripe_secret_key: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                            placeholder="sk_live_..."
+                          />
+                          <p className="text-xs text-gray-500 mt-1">⚠️ Keep this secret and never share it publicly</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PayPal Configuration */}
+                  {settings.paypal_enabled && (
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <h3 className="font-semibold text-gray-900 mb-4">PayPal Configuration</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Client ID
+                          </label>
+                          <input
+                            type="text"
+                            value={settings.paypal_client_id || ''}
+                            onChange={(e) => setSettings({ ...settings, paypal_client_id: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                            placeholder="Your PayPal Client ID"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Secret
+                          </label>
+                          <input
+                            type="password"
+                            value={settings.paypal_secret || ''}
+                            onChange={(e) => setSettings({ ...settings, paypal_secret: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                            placeholder="Your PayPal Secret"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">⚠️ Keep this secret and never share it publicly</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Payment Display Settings */}
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-4">Payment Display Settings</h3>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Payment Currency
+                        </label>
+                        <select
+                          value={settings.payment_currency || 'GBP'}
+                          onChange={(e) => setSettings({ ...settings, payment_currency: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                        >
+                          <option value="GBP">GBP (£)</option>
+                          <option value="USD">USD ($)</option>
+                          <option value="EUR">EUR (€)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Processing Fee (%)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="100"
+                          value={settings.processing_fee_percentage || 0}
+                          onChange={(e) => setSettings({ ...settings, processing_fee_percentage: parseFloat(e.target.value) })}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Save Button */}
                 <div className="flex items-center gap-4">
                   <button

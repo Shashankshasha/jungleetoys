@@ -49,6 +49,17 @@ export async function PUT(req: NextRequest) {
         instagram_url: body.instagram_url,
         twitter_url: body.twitter_url,
         about_text: body.about_text,
+        // Payment settings
+        stripe_enabled: body.stripe_enabled,
+        paypal_enabled: body.paypal_enabled,
+        cod_enabled: body.cod_enabled,
+        bank_transfer_enabled: body.bank_transfer_enabled,
+        stripe_publishable_key: body.stripe_publishable_key,
+        stripe_secret_key: body.stripe_secret_key,
+        paypal_client_id: body.paypal_client_id,
+        paypal_secret: body.paypal_secret,
+        payment_currency: body.payment_currency,
+        processing_fee_percentage: body.processing_fee_percentage,
         updated_at: new Date().toISOString(),
       })
       .eq('id', '00000000-0000-0000-0000-000000000001')

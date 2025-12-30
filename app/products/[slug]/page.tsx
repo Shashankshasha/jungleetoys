@@ -18,7 +18,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { useCart, formatPrice } from '@/lib/cart';
-import { Product, supabase } from '@/lib/supabase';
+import { Product, supabase, normalizeProduct } from '@/lib/supabase';
 import ProductCard from '@/components/ProductCard';
 import MakeOfferModal from '@/components/MakeOfferModal';
 
@@ -36,6 +36,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
     const fetchProduct = async () => {
       try {
         setLoading(true);
+        console.log('🔍 Fetching product with slug:', params.slug);
 
         // Fetch main product by slug
         const { data: productData, error: productError } = await supabase
@@ -44,8 +45,13 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
           .eq('slug', params.slug)
           .single();
 
-        if (productError) throw productError;
-        setProduct(productData);
+        if (productError) {
+          console.error('❌ Error fetching product:', productError);
+          throw productError;
+        }
+
+        console.log('✅ Product fetched:', productData);
+        setProduct(normalizeProduct(productData));
 
         // Fetch related products (same category or featured)
         if (productData) {
@@ -56,10 +62,11 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             .eq('category_id', productData.category_id)
             .limit(4);
 
-          setRelatedProducts(relatedData || []);
+          console.log('📦 Related products:', relatedData?.length || 0);
+          setRelatedProducts((relatedData || []).map(normalizeProduct));
         }
       } catch (error) {
-        console.error('Error fetching product:', error);
+        console.error('❌ Error fetching product:', error);
       } finally {
         setLoading(false);
       }
@@ -98,7 +105,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
     : null;
 
   // Placeholder images for demo
-  const images = product.images.length > 0 ? product.images : [null, null, null, null];
+  const images = (product.images && product.images.length > 0) ? product.images : [null, null, null, null];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-jungle-50">

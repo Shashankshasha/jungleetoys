@@ -3,13 +3,7 @@
 import { useState } from 'react';
 import { X, Tag, Loader2 } from 'lucide-react';
 import { formatPrice } from '@/lib/cart';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  images: string[];
-}
+import { Product } from '@/lib/supabase';
 
 interface MakeOfferModalProps {
   isOpen: boolean;
@@ -110,11 +104,17 @@ export default function MakeOfferModal({ isOpen, onClose, product }: MakeOfferMo
 
         {/* Product Info */}
         <div className="flex gap-4 p-4 bg-jungle-50 rounded-xl mb-6">
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="w-20 h-20 object-cover rounded-lg"
-          />
+          {product.images && product.images.length > 0 && product.images[0] ? (
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              className="w-20 h-20 object-cover rounded-lg"
+            />
+          ) : (
+            <div className="w-20 h-20 bg-gradient-to-br from-jungle-100 to-banana-100 rounded-lg flex items-center justify-center text-3xl">
+              🧸
+            </div>
+          )}
           <div>
             <h3 className="font-semibold text-gray-900">{product.name}</h3>
             <p className="text-sm text-gray-600">

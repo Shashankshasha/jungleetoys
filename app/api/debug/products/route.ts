@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 export async function GET() {
   try {
     // Fetch all products from Supabase
-    const { data, error, count } = await supabase
+    const { data, error, count } = await (supabase as any)
       .from('products')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });

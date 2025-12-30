@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let query = supabase
+    let query = (supabase as any)
       .from('products')
       .select('*', { count: 'exact' });
 
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create product
-    const { data, error } = await supabaseAdmin.from('products').insert({
+    const { data, error } = await (supabaseAdmin as any).from('products').insert({
       name: body.name,
       slug: body.slug,
       description: body.description || '',
@@ -130,7 +130,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // Update product
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .from('products')
       .update({
         ...updates,
@@ -168,7 +168,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin
+    const { error } = await (supabaseAdmin as any)
       .from('products')
       .delete()
       .eq('id', id);

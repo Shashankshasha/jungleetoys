@@ -6,6 +6,17 @@ import { sendOfferApprovalEmail } from '@/lib/email';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Helper to ensure supabaseAdmin is available
+function ensureSupabaseAdmin() {
+  if (!supabaseAdmin) {
+    return NextResponse.json(
+      { error: 'Server configuration error' },
+      { status: 500 }
+    );
+  }
+  return null;
+}
+
 // GET /api/offers - Fetch all offers (admin only)
 export async function GET(req: NextRequest) {
   // Require admin authentication
@@ -14,11 +25,14 @@ export async function GET(req: NextRequest) {
     return authResult;
   }
 
+  const adminCheck = ensureSupabaseAdmin();
+  if (adminCheck) return adminCheck;
+
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status');
 
-    let query = supabaseAdmin
+    let query = (supabaseAdmin as any)
       .from('product_offers')
       .select(`
         *,
@@ -59,6 +73,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/offers - Submit a new offer (public)
 export async function POST(req: NextRequest) {
+  const adminCheck = ensureSupabaseAdmin();
+  if (adminCheck) return adminCheck;
+
   try {
     const body = await req.json();
 
@@ -91,7 +108,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create offer
-    const { data, error } = await supabase.from('product_offers').insert({
+    const { data, error } = await (supabase as any).from('product_offers').insert({
       product_id: body.product_id,
       customer_name: body.customer_name,
       customer_email: body.customer_email,
@@ -127,7 +144,10 @@ export async function PATCH(req: NextRequest) {
     return authResult;
   }
 
-  try {
+  const adminCheck = ensureSupabaseAdmin();
+  if (adminCheck) return adminCheck;
+
+  try{
     const body = await req.json();
     const { id, status, admin_notes } = body;
 
@@ -139,7 +159,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Fetch the current offer with product details before updating
-    const { data: currentOffer, error: fetchError } = await supabaseAdmin
+    const { data: currentOffer, error: fetchError } = await (supabaseAdmin as any)
       .from('product_offers')
       .select(`
         *,
@@ -173,7 +193,7 @@ export async function PATCH(req: NextRequest) {
       updateData.admin_notes = admin_notes;
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .from('product_offers')
       .update(updateData)
       .eq('id', id)
@@ -192,7 +212,7 @@ export async function PATCH(req: NextRequest) {
     if (status === 'approved') {
       try {
         // Fetch store settings for email details
-        const { data: settings } = await supabaseAdmin
+        const { data: settings } = await (supabaseAdmin as any)
           .from('store_settings')
           .select('store_name, support_email')
           .eq('id', '00000000-0000-0000-0000-000000000001')
@@ -237,6 +257,9 @@ export async function DELETE(req: NextRequest) {
     return authResult;
   }
 
+  const adminCheck = ensureSupabaseAdmin();
+  if (adminCheck) return adminCheck;
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -248,7 +271,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const { error } = await supabaseAdmin
+    const { error } = await (supabaseAdmin as any)
       .from('product_offers')
       .delete()
       .eq('id', id);

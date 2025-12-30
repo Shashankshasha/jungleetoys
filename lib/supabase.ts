@@ -17,17 +17,22 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Server-side client with service role
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
+// Server-side client with service role (only available on server)
+// This should NEVER be imported in client components
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const _supabaseAdmin = serviceRoleKey
+  ? createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  : null;
+
+// Export with non-null assertion for API routes (they run on server)
+// In browser, this will be null which is fine since it's never used there
+export const supabaseAdmin = _supabaseAdmin as ReturnType<typeof createClient>;
 
 // Database types
 export interface Product {

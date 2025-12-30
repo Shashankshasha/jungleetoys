@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 // GET /api/settings - Fetch store settings (public)
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('store_settings')
       .select('*')
       .single();
@@ -38,7 +38,7 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
 
     // Update settings (there should only be one row)
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .from('store_settings')
       .update({
         store_name: body.store_name,

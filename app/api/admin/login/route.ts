@@ -17,8 +17,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Ensure supabaseAdmin is available (should always be on server)
+    if (!supabaseAdmin) {
+      console.error('supabaseAdmin is not initialized');
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
+
     // Verify admin credentials using Supabase function
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .rpc('verify_admin_login', {
         p_email: email,
         p_password: password,

@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       
       // Create order in database
       try {
-        const { error } = await supabaseAdmin.from('orders').insert({
+        const { error } = await (supabaseAdmin as any).from('orders').insert({
           stripe_session_id: session.id,
           stripe_payment_intent_id: session.payment_intent as string,
           customer_email: session.customer_email,

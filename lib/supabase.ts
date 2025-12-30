@@ -38,7 +38,7 @@ export interface Product {
   price: number;
   compare_price?: number;
   category_id: string;
-  images: string[];
+  images: string[] | null;
   stock: number;
   featured: boolean;
   is_new: boolean;
@@ -46,6 +46,17 @@ export interface Product {
   brand?: string;
   created_at: string;
   updated_at: string;
+}
+
+// Helper to normalize product data from database
+export function normalizeProduct(product: any): Product {
+  return {
+    ...product,
+    images: Array.isArray(product.images) ? product.images : [],
+    featured: product.featured ?? false,
+    is_new: product.is_new ?? false,
+    stock: product.stock ?? 0,
+  };
 }
 
 export interface Category {

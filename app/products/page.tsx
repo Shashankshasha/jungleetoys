@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, SlidersHorizontal, X, ChevronDown, Search, Grid3X3, LayoutList } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
-import { Product, supabase } from '@/lib/supabase';
+import { Product, supabase, normalizeProduct } from '@/lib/supabase';
 
 const categories = [
   { id: 'action-figures', name: 'Action Figures', emoji: '🦸' },
@@ -71,7 +71,9 @@ function ProductsContent() {
         console.log('✅ Products fetched successfully:', data?.length || 0, 'products');
         console.log('📦 Product data:', data);
 
-        setAllProducts(data || []);
+        // Normalize products to ensure consistent data structure
+        const normalizedProducts = (data || []).map(normalizeProduct);
+        setAllProducts(normalizedProducts);
       } catch (error) {
         console.error('❌ Error fetching products:', error);
       } finally {

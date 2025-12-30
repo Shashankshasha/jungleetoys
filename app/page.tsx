@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
-import { Product, supabase } from '@/lib/supabase';
+import { Product, supabase, normalizeProduct } from '@/lib/supabase';
 
 const categories = [
   { name: 'Action Figures', slug: 'action-figures', emoji: '🦸', color: 'from-red-400 to-orange-500' },
@@ -38,7 +38,10 @@ export default function HomePage() {
         }
 
         console.log('✅ Home page: Products fetched:', data?.length || 0);
-        setAllProducts(data || []);
+
+        // Normalize products to ensure consistent data structure
+        const normalizedProducts = (data || []).map(normalizeProduct);
+        setAllProducts(normalizedProducts);
       } catch (error) {
         console.error('❌ Home page: Error fetching products:', error);
       } finally {

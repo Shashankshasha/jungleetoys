@@ -43,7 +43,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-square mb-4 bg-gradient-to-br from-jungle-50 to-banana-50 
                       rounded-2xl overflow-hidden">
-          {product.images?.[0] ? (
+          {product.images && product.images.length > 0 && product.images[0] ? (
             <Image
               src={product.images[0]}
               alt={product.name}

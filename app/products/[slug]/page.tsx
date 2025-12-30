@@ -18,7 +18,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { useCart, formatPrice } from '@/lib/cart';
-import { Product, supabase } from '@/lib/supabase';
+import { Product, supabase, normalizeProduct } from '@/lib/supabase';
 import ProductCard from '@/components/ProductCard';
 import MakeOfferModal from '@/components/MakeOfferModal';
 
@@ -51,7 +51,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
         }
 
         console.log('✅ Product fetched:', productData);
-        setProduct(productData);
+        setProduct(normalizeProduct(productData));
 
         // Fetch related products (same category or featured)
         if (productData) {
@@ -63,7 +63,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             .limit(4);
 
           console.log('📦 Related products:', relatedData?.length || 0);
-          setRelatedProducts(relatedData || []);
+          setRelatedProducts((relatedData || []).map(normalizeProduct));
         }
       } catch (error) {
         console.error('❌ Error fetching product:', error);
@@ -105,7 +105,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
     : null;
 
   // Placeholder images for demo
-  const images = product.images.length > 0 ? product.images : [null, null, null, null];
+  const images = (product.images && product.images.length > 0) ? product.images : [null, null, null, null];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-jungle-50">

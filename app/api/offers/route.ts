@@ -6,6 +6,17 @@ import { sendOfferApprovalEmail } from '@/lib/email';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Helper to ensure supabaseAdmin is available
+function ensureSupabaseAdmin() {
+  if (!supabaseAdmin) {
+    return NextResponse.json(
+      { error: 'Server configuration error' },
+      { status: 500 }
+    );
+  }
+  return null;
+}
+
 // GET /api/offers - Fetch all offers (admin only)
 export async function GET(req: NextRequest) {
   // Require admin authentication
@@ -13,6 +24,9 @@ export async function GET(req: NextRequest) {
   if (authResult instanceof Response) {
     return authResult;
   }
+
+  const adminCheck = ensureSupabaseAdmin();
+  if (adminCheck) return adminCheck;
 
   try {
     const { searchParams } = new URL(req.url);
@@ -59,6 +73,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/offers - Submit a new offer (public)
 export async function POST(req: NextRequest) {
+  const adminCheck = ensureSupabaseAdmin();
+  if (adminCheck) return adminCheck;
+
   try {
     const body = await req.json();
 
@@ -127,7 +144,10 @@ export async function PATCH(req: NextRequest) {
     return authResult;
   }
 
-  try {
+  const adminCheck = ensureSupabaseAdmin();
+  if (adminCheck) return adminCheck;
+
+  try{
     const body = await req.json();
     const { id, status, admin_notes } = body;
 
@@ -236,6 +256,9 @@ export async function DELETE(req: NextRequest) {
   if (authResult instanceof Response) {
     return authResult;
   }
+
+  const adminCheck = ensureSupabaseAdmin();
+  if (adminCheck) return adminCheck;
 
   try {
     const { searchParams } = new URL(req.url);

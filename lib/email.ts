@@ -9,6 +9,7 @@ interface OfferApprovalEmailData {
   productImage?: string;
   storeName: string;
   supportEmail: string;
+  paymentUrl?: string;
 }
 
 // Create SMTP transporter using Hostinger email
@@ -34,6 +35,7 @@ export async function sendOfferApprovalEmail(data: OfferApprovalEmailData) {
     productImage,
     storeName,
     supportEmail,
+    paymentUrl,
   } = data;
 
   const emailHtml = `
@@ -109,6 +111,22 @@ export async function sendOfferApprovalEmail(data: OfferApprovalEmailData) {
               </table>
 
               <!-- Payment Instructions -->
+              ${paymentUrl ? `
+              <div style="background-color: #dcfce7; border-left: 4px solid #22c55e; padding: 20px; margin: 30px 0; border-radius: 8px;">
+                <h2 style="margin: 0 0 15px; color: #14532d; font-size: 18px;">💳 Ready to Complete Your Purchase?</h2>
+                <p style="margin: 0 0 20px; color: #166534; font-size: 14px; line-height: 1.6;">
+                  Click the button below to securely pay for your approved offer. Your item will ship as soon as payment is confirmed!
+                </p>
+                <div style="text-align: center; margin: 20px 0;">
+                  <a href="${paymentUrl}" style="display: inline-block; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.3);">
+                    🔒 Pay Now - £${offerAmount.toFixed(2)}
+                  </a>
+                </div>
+                <p style="margin: 20px 0 0; color: #166534; font-size: 12px; text-align: center;">
+                  Secure payment powered by Stripe
+                </p>
+              </div>
+              ` : `
               <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 30px 0; border-radius: 8px;">
                 <h2 style="margin: 0 0 15px; color: #92400e; font-size: 18px;">💳 Next Steps - Payment Instructions</h2>
                 <p style="margin: 0 0 10px; color: #78350f; font-size: 14px; line-height: 1.6;">
@@ -121,6 +139,7 @@ export async function sendOfferApprovalEmail(data: OfferApprovalEmailData) {
                   We'll send you payment details and arrange delivery once payment is confirmed.
                 </p>
               </div>
+              `}
 
               <p style="margin: 30px 0 0; font-size: 14px; color: #6b7280; line-height: 1.6;">
                 If you have any questions, please don't hesitate to contact us. We're excited to get this toy to you!

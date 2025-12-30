@@ -56,15 +56,24 @@ function ProductsContent() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
+        console.log('🔍 Fetching products from Supabase...');
+
         const { data, error } = await supabase
           .from('products')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Supabase error:', error);
+          throw error;
+        }
+
+        console.log('✅ Products fetched successfully:', data?.length || 0, 'products');
+        console.log('📦 Product data:', data);
+
         setAllProducts(data || []);
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('❌ Error fetching products:', error);
       } finally {
         setLoading(false);
       }
@@ -78,6 +87,7 @@ function ProductsContent() {
 
   // Filtered and sorted products
   const filteredProducts = useMemo(() => {
+    console.log('🔄 Filtering products. Total products:', allProducts.length);
     let products = [...allProducts];
 
     // Apply URL filter param
@@ -136,8 +146,9 @@ function ProductsContent() {
         products.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
     }
 
+    console.log('✨ Filtered products count:', products.length);
     return products;
-  }, [searchQuery, selectedCategories, selectedAges, selectedPriceRange, sortBy, filterParam]);
+  }, [allProducts, searchQuery, selectedCategories, selectedAges, selectedPriceRange, sortBy, filterParam]);
 
   const toggleCategory = (categoryId: string) => {
     setSelectedCategories(prev =>

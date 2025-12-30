@@ -36,6 +36,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
     const fetchProduct = async () => {
       try {
         setLoading(true);
+        console.log('🔍 Fetching product with slug:', params.slug);
 
         // Fetch main product by slug
         const { data: productData, error: productError } = await supabase
@@ -44,7 +45,12 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
           .eq('slug', params.slug)
           .single();
 
-        if (productError) throw productError;
+        if (productError) {
+          console.error('❌ Error fetching product:', productError);
+          throw productError;
+        }
+
+        console.log('✅ Product fetched:', productData);
         setProduct(productData);
 
         // Fetch related products (same category or featured)
@@ -56,10 +62,11 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             .eq('category_id', productData.category_id)
             .limit(4);
 
+          console.log('📦 Related products:', relatedData?.length || 0);
           setRelatedProducts(relatedData || []);
         }
       } catch (error) {
-        console.error('Error fetching product:', error);
+        console.error('❌ Error fetching product:', error);
       } finally {
         setLoading(false);
       }

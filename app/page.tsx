@@ -1,142 +1,9 @@
-import Link from 'next/link';
-import Image from 'next/image';
-import ProductCard from '@/components/ProductCard';
-import { Product } from '@/lib/supabase';
+'use client';
 
-// Sample products for demonstration - in production, fetch from Supabase
-const sampleProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Super Hero Action Figure Set',
-    slug: 'super-hero-action-figure-set',
-    description: 'Amazing collection of 6 super hero action figures with accessories',
-    price: 24.99,
-    compare_price: 34.99,
-    category_id: '1',
-    images: [],
-    stock: 15,
-    featured: true,
-    is_new: true,
-    age_range: '5-12 years',
-    brand: 'HeroWorld',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    name: 'Wooden Building Blocks (100 pcs)',
-    slug: 'wooden-building-blocks-100',
-    description: 'Educational wooden blocks in various shapes and colors',
-    price: 29.99,
-    category_id: '2',
-    images: [],
-    stock: 25,
-    featured: true,
-    is_new: false,
-    age_range: '3-8 years',
-    brand: 'EduPlay',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    name: 'Remote Control Racing Car',
-    slug: 'rc-racing-car',
-    description: 'High-speed RC car with rechargeable battery',
-    price: 39.99,
-    compare_price: 49.99,
-    category_id: '3',
-    images: [],
-    stock: 8,
-    featured: true,
-    is_new: true,
-    age_range: '8+ years',
-    brand: 'SpeedKing',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    name: 'Cuddly Teddy Bear XL',
-    slug: 'cuddly-teddy-bear-xl',
-    description: 'Super soft and huggable teddy bear, 60cm tall',
-    price: 19.99,
-    category_id: '4',
-    images: [],
-    stock: 30,
-    featured: true,
-    is_new: false,
-    age_range: '0-99 years',
-    brand: 'CuddlePals',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '5',
-    name: 'Science Experiment Kit',
-    slug: 'science-experiment-kit',
-    description: '50+ experiments to explore physics and chemistry',
-    price: 34.99,
-    category_id: '2',
-    images: [],
-    stock: 12,
-    featured: false,
-    is_new: true,
-    age_range: '8-14 years',
-    brand: 'ScienceWiz',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '6',
-    name: 'Princess Dress-Up Set',
-    slug: 'princess-dress-up-set',
-    description: 'Beautiful princess costume with tiara and accessories',
-    price: 27.99,
-    compare_price: 35.99,
-    category_id: '4',
-    images: [],
-    stock: 20,
-    featured: false,
-    is_new: false,
-    age_range: '3-8 years',
-    brand: 'FairyTale',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '7',
-    name: 'Dinosaur World Playset',
-    slug: 'dinosaur-world-playset',
-    description: '12 realistic dinosaur figures with playmat',
-    price: 22.99,
-    category_id: '1',
-    images: [],
-    stock: 18,
-    featured: true,
-    is_new: false,
-    age_range: '4-10 years',
-    brand: 'DinoLand',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '8',
-    name: 'Musical Learning Tablet',
-    slug: 'musical-learning-tablet',
-    description: 'Interactive tablet with songs, games and learning activities',
-    price: 44.99,
-    category_id: '2',
-    images: [],
-    stock: 5,
-    featured: true,
-    is_new: true,
-    age_range: '2-5 years',
-    brand: 'LearnFun',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import ProductCard from '@/components/ProductCard';
+import { Product, supabase } from '@/lib/supabase';
 
 const categories = [
   { name: 'Action Figures', slug: 'action-figures', emoji: '🦸', color: 'from-red-400 to-orange-500' },
@@ -150,8 +17,40 @@ const categories = [
 ];
 
 export default function HomePage() {
-  const featuredProducts = sampleProducts.filter(p => p.featured);
-  const newArrivals = sampleProducts.filter(p => p.is_new);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch products from Supabase
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        console.log('🏠 Home page: Fetching products from Supabase...');
+
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('❌ Home page: Supabase error:', error);
+          throw error;
+        }
+
+        console.log('✅ Home page: Products fetched:', data?.length || 0);
+        setAllProducts(data || []);
+      } catch (error) {
+        console.error('❌ Home page: Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const featuredProducts = allProducts.filter(p => p.featured).slice(0, 8);
+  const newArrivals = allProducts.filter(p => p.is_new).slice(0, 8);
 
   return (
     <div className="min-h-screen">
@@ -177,7 +76,7 @@ export default function HomePage() {
                 <span className="text-gradient-tiger">Play!</span>
               </h1>
               <p className="text-lg text-gray-600 mb-8 max-w-lg mx-auto lg:mx-0">
-                Discover our amazing collection of toys for children of all ages. 
+                Discover our amazing collection of toys for children of all ages.
                 Quality toys that spark creativity and bring endless joy! 🌟
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -266,16 +165,16 @@ export default function HomePage() {
               <Link
                 key={category.slug}
                 href={`/products?category=${category.slug}`}
-                className="group relative bg-gradient-to-br rounded-2xl p-6 text-center 
-                         hover:shadow-xl hover:-translate-y-1 transition-all duration-300 
+                className="group relative bg-gradient-to-br rounded-2xl p-6 text-center
+                         hover:shadow-xl hover:-translate-y-1 transition-all duration-300
                          overflow-hidden"
                 style={{
                   background: `linear-gradient(135deg, var(--tw-gradient-stops))`,
                 }}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-10 
+                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-10
                               group-hover:opacity-20 transition-opacity`} />
-                <span className="relative text-5xl lg:text-6xl block mb-3 
+                <span className="relative text-5xl lg:text-6xl block mb-3
                                group-hover:scale-110 transition-transform duration-300">
                   {category.emoji}
                 </span>
@@ -289,38 +188,47 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products */}
-      <section className="py-16 bg-gradient-to-b from-white to-jungle-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="font-display text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-                Best Sellers 🏆
-              </h2>
-              <p className="text-gray-600">Our most popular toys loved by kids everywhere!</p>
+      {loading ? (
+        <section className="py-16 bg-gradient-to-b from-white to-jungle-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-jungle-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading products...</p>
+          </div>
+        </section>
+      ) : featuredProducts.length > 0 ? (
+        <section className="py-16 bg-gradient-to-b from-white to-jungle-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-12">
+              <div>
+                <h2 className="font-display text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                  Best Sellers 🏆
+                </h2>
+                <p className="text-gray-600">Our most popular toys loved by kids everywhere!</p>
+              </div>
+              <Link
+                href="/products?filter=featured"
+                className="hidden sm:inline-flex items-center gap-2 text-jungle-600
+                         font-semibold hover:text-jungle-700 transition-colors"
+              >
+                View All
+                <span>→</span>
+              </Link>
             </div>
-            <Link
-              href="/products?filter=featured"
-              className="hidden sm:inline-flex items-center gap-2 text-jungle-600 
-                       font-semibold hover:text-jungle-700 transition-colors"
-            >
-              View All
-              <span>→</span>
-            </Link>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product, index) => (
-              <ProductCard key={product.id} product={product} index={index} />
-            ))}
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} />
+              ))}
+            </div>
 
-          <div className="text-center mt-8 sm:hidden">
-            <Link href="/products?filter=featured" className="btn-jungle">
-              View All Best Sellers
-            </Link>
+            <div className="text-center mt-8 sm:hidden">
+              <Link href="/products?filter=featured" className="btn-jungle">
+                View All Best Sellers
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       {/* Promo Banner */}
       <section className="py-12 bg-gradient-to-r from-tiger-500 via-banana-500 to-jungle-500">
@@ -335,7 +243,7 @@ export default function HomePage() {
             </p>
             <Link
               href="/products"
-              className="inline-block bg-white text-jungle-700 font-bold px-8 py-4 
+              className="inline-block bg-white text-jungle-700 font-bold px-8 py-4
                        rounded-full hover:bg-jungle-50 transition-colors shadow-lg"
             >
               Shop Now & Save!
@@ -345,32 +253,34 @@ export default function HomePage() {
       </section>
 
       {/* New Arrivals */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="font-display text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-                New Arrivals ✨
-              </h2>
-              <p className="text-gray-600">Fresh toys just landed in the jungle!</p>
+      {!loading && newArrivals.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-12">
+              <div>
+                <h2 className="font-display text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                  New Arrivals ✨
+                </h2>
+                <p className="text-gray-600">Fresh toys just landed in the jungle!</p>
+              </div>
+              <Link
+                href="/products?filter=new"
+                className="hidden sm:inline-flex items-center gap-2 text-jungle-600
+                         font-semibold hover:text-jungle-700 transition-colors"
+              >
+                View All
+                <span>→</span>
+              </Link>
             </div>
-            <Link
-              href="/products?filter=new"
-              className="hidden sm:inline-flex items-center gap-2 text-jungle-600 
-                       font-semibold hover:text-jungle-700 transition-colors"
-            >
-              View All
-              <span>→</span>
-            </Link>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {newArrivals.map((product, index) => (
-              <ProductCard key={product.id} product={product} index={index} />
-            ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {newArrivals.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Why Choose Us */}
       <section className="py-16 bg-gradient-to-b from-jungle-50 to-white">
@@ -383,7 +293,7 @@ export default function HomePage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-jungle-100 rounded-2xl flex items-center justify-center 
+              <div className="w-16 h-16 bg-jungle-100 rounded-2xl flex items-center justify-center
                             text-3xl mx-auto mb-4">
                 ✅
               </div>
@@ -393,7 +303,7 @@ export default function HomePage() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-tiger-100 rounded-2xl flex items-center justify-center 
+              <div className="w-16 h-16 bg-tiger-100 rounded-2xl flex items-center justify-center
                             text-3xl mx-auto mb-4">
                 🚚
               </div>
@@ -403,7 +313,7 @@ export default function HomePage() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-parrot-100 rounded-2xl flex items-center justify-center 
+              <div className="w-16 h-16 bg-parrot-100 rounded-2xl flex items-center justify-center
                             text-3xl mx-auto mb-4">
                 💝
               </div>
@@ -413,7 +323,7 @@ export default function HomePage() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-banana-100 rounded-2xl flex items-center justify-center 
+              <div className="w-16 h-16 bg-banana-100 rounded-2xl flex items-center justify-center
                             text-3xl mx-auto mb-4">
                 💬
               </div>

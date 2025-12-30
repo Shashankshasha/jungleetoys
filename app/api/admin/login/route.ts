@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify admin credentials using Supabase function
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .rpc('verify_admin_login', {
         p_email: email,
         p_password: password,

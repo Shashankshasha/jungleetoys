@@ -4,6 +4,7 @@ import { requireAdminAuth } from '@/lib/auth';
 import { sendOfferApprovalEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // GET /api/offers - Fetch all offers (admin only)
 export async function GET(req: NextRequest) {

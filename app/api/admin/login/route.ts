@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { SignJWT } from 'jose';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // POST /api/admin/login - Admin login
 export async function POST(req: NextRequest) {

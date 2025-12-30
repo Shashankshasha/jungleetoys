@@ -1,7 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Debug logging
+if (typeof window !== 'undefined') {
+  console.log('🔍 Supabase Config Check:');
+  console.log('URL exists:', !!supabaseUrl);
+  console.log('Key exists:', !!supabaseAnonKey);
+  console.log('URL value:', supabaseUrl?.substring(0, 30) + '...');
+}
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(`Missing Supabase credentials. URL: ${!!supabaseUrl}, Key: ${!!supabaseAnonKey}`);
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

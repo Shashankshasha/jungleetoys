@@ -3,8 +3,25 @@ import { stripe } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
   try {
+    // Validate Stripe is configured
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('STRIPE_SECRET_KEY is not configured');
+      return NextResponse.json(
+        { error: 'Stripe is not configured. Please add STRIPE_SECRET_KEY environment variable.' },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.NEXT_PUBLIC_SITE_URL) {
+      console.error('NEXT_PUBLIC_SITE_URL is not configured');
+      return NextResponse.json(
+        { error: 'Site URL is not configured. Please add NEXT_PUBLIC_SITE_URL environment variable.' },
+        { status: 500 }
+      );
+    }
+
     const body = await req.json();
-    const { items, shipping, giftWrap } = body;
+    const { items, shipping, giftWrap, selectedShippingRate } = body;
 
     // Calculate totals
     const subtotal = items.reduce(
@@ -13,15 +30,16 @@ export async function POST(req: NextRequest) {
       0
     );
 
-    const shippingCost = subtotal >= 30 ? 0 : 3.99; // Flat £3.99 shipping
+    // Use selected shipping rate or default to free if over £30
+    const shippingCost = subtotal >= 30 ? 0 : (selectedShippingRate?.amount ? parseFloat(selectedShippingRate.amount) : 3.99);
     const giftWrapCost = giftWrap ? 3.99 : 0;
 
     // Create line items for Stripe
-    const lineItems = items.map((item: { productId: string; quantity: number; price: number; name?: string }) => ({
+    const lineItems = items.map((item: { productId: string; quantity: number; price: number; name: string }) => ({
       price_data: {
         currency: 'gbp',
         product_data: {
-          name: item.name || `Product ${item.productId}`,
+          name: item.name,
         },
         unit_amount: Math.round(item.price * 100), // Stripe uses pence
       },
@@ -30,11 +48,15 @@ export async function POST(req: NextRequest) {
 
     // Add shipping as a line item if not free
     if (shippingCost > 0) {
+      const shippingName = selectedShippingRate?.provider
+        ? `${selectedShippingRate.provider} - ${selectedShippingRate.serviceName}`
+        : 'Shipping';
+
       lineItems.push({
         price_data: {
           currency: 'gbp',
           product_data: {
-            name: 'Shipping',
+            name: shippingName,
           },
           unit_amount: Math.round(shippingCost * 100),
         },
@@ -74,10 +96,11 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Checkout error:', error);
+    const errorMessage = error?.message || 'Failed to create checkout session';
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { error: `Stripe Error: ${errorMessage}` },
       { status: 500 }
     );
   }

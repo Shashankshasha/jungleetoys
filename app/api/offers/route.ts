@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/auth';
 import { sendOfferApprovalEmail } from '@/lib/email';
+import { stripe } from '@/lib/stripe';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -221,6 +222,45 @@ export async function PATCH(req: NextRequest) {
         const storeName = settings?.store_name || 'JungleeToys';
         const supportEmail = settings?.support_email || 'support@jungleetoys.com';
 
+        // Create Stripe Payment Link for the approved offer amount
+        let paymentUrl: string | undefined;
+        try {
+          const paymentLink = await stripe.paymentLinks.create({
+            line_items: [
+              {
+                price_data: {
+                  currency: 'gbp',
+                  product_data: {
+                    name: currentOffer.products.name,
+                    images: currentOffer.products.images?.[0] ? [currentOffer.products.images[0]] : [],
+                    description: `Approved offer - Special price: £${currentOffer.offer_amount.toFixed(2)}`,
+                  },
+                  unit_amount: Math.round(currentOffer.offer_amount * 100), // Convert to pence
+                },
+                quantity: 1,
+              },
+            ] as any,
+            after_completion: {
+              type: 'redirect',
+              redirect: {
+                url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?offer_id=${currentOffer.id}`,
+              },
+            },
+            metadata: {
+              offer_id: currentOffer.id,
+              product_id: currentOffer.product_id,
+              customer_email: currentOffer.customer_email,
+              customer_name: currentOffer.customer_name,
+            },
+          });
+
+          paymentUrl = paymentLink.url;
+          console.log(`Payment link created: ${paymentUrl}`);
+        } catch (stripeError) {
+          console.error('Error creating Stripe payment link:', stripeError);
+          // Continue without payment link - email will show manual payment instructions
+        }
+
         await sendOfferApprovalEmail({
           customerName: currentOffer.customer_name,
           customerEmail: currentOffer.customer_email,
@@ -230,6 +270,7 @@ export async function PATCH(req: NextRequest) {
           productImage: currentOffer.products.images?.[0],
           storeName,
           supportEmail,
+          paymentUrl,
         });
 
         console.log(`Approval email sent to ${currentOffer.customer_email}`);

@@ -21,7 +21,7 @@ export default function ShippingPage() {
         <section className="bg-white rounded-2xl p-8 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
             <Package className="h-8 w-8 text-jungle-600" />
-            <h2 className="text-2xl font-bold text-gray-900">Shipping Rates</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Shipping Options</h2>
           </div>
 
           <div className="space-y-4">
@@ -34,11 +34,43 @@ export default function ShippingPage() {
             </div>
 
             <div className="bg-gray-50 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">Standard Delivery</h3>
-                <span className="text-xl font-bold text-gray-900">£3.99</span>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Choose Your Shipping Method at Checkout</h3>
+              <p className="text-gray-600 mb-4">
+                For orders under £30, you can choose from multiple shipping options at checkout, including:
+              </p>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between bg-white p-3 rounded-lg">
+                  <div>
+                    <p className="font-medium text-gray-900">📮 Royal Mail 2nd Class</p>
+                    <p className="text-sm text-gray-500">Most economical option</p>
+                  </div>
+                  <span className="text-gray-700 font-semibold">From £2.75</span>
+                </div>
+
+                <div className="flex items-center justify-between bg-white p-3 rounded-lg">
+                  <div>
+                    <p className="font-medium text-gray-900">📦 Royal Mail 1st Class</p>
+                    <p className="text-sm text-gray-500">Faster delivery</p>
+                  </div>
+                  <span className="text-gray-700 font-semibold">From £3.50</span>
+                </div>
+
+                <div className="flex items-center justify-between bg-white p-3 rounded-lg">
+                  <div>
+                    <p className="font-medium text-gray-900">🚚 DPD / Parcelforce</p>
+                    <p className="text-sm text-gray-500">Tracked delivery</p>
+                  </div>
+                  <span className="text-gray-700 font-semibold">From £4.50</span>
+                </div>
               </div>
-              <p className="text-gray-600">For orders under £30</p>
+
+              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-900">
+                  <strong>💡 Pro Tip:</strong> Final shipping prices are calculated at checkout based on your location and parcel weight.
+                  All prices include a 25% handling fee to cover packaging and processing.
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -97,6 +129,59 @@ export default function ShippingPage() {
               <p className="text-gray-600 text-sm">
                 Delivery to Scottish Highlands, Islands, and other remote areas may take an additional 1-2 working days.
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Shipping Costs & Handling */}
+        <section className="bg-white rounded-2xl p-8 shadow-sm border-2 border-jungle-200">
+          <div className="flex items-center gap-3 mb-6">
+            <Package className="h-8 w-8 text-jungle-600" />
+            <h2 className="text-2xl font-bold text-gray-900">Shipping Costs & Handling Fee</h2>
+          </div>
+
+          <div className="space-y-4 text-gray-600">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">How Shipping Costs Work</h3>
+              <p>
+                We partner with trusted UK carriers (Royal Mail, DPD, Parcelforce) to deliver your toys safely.
+                At checkout, you'll see real-time shipping options with accurate pricing based on your location and package weight.
+              </p>
+            </div>
+
+            <div className="bg-jungle-50 rounded-lg p-4">
+              <h3 className="font-semibold text-gray-900 mb-2">25% Handling Fee Explained</h3>
+              <p className="mb-3">
+                All shipping prices include a 25% handling fee to cover:
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-5 w-5 text-jungle-600 mt-0.5 flex-shrink-0" />
+                  <span><strong>Professional Packaging:</strong> Quality boxes, bubble wrap, and protective materials to keep your toys safe</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-5 w-5 text-jungle-600 mt-0.5 flex-shrink-0" />
+                  <span><strong>Order Processing:</strong> Careful picking, packing, and quality checking of every order</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-5 w-5 text-jungle-600 mt-0.5 flex-shrink-0" />
+                  <span><strong>Shipping Labels & Documentation:</strong> Professional labels and necessary customs forms</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-5 w-5 text-jungle-600 mt-0.5 flex-shrink-0" />
+                  <span><strong>Local Collection:</strong> Travel costs to and from the post office/courier depot</span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Example Pricing</h3>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="mb-2">If carrier charges <strong>£2.20</strong> for shipping:</p>
+                <p className="text-sm">• Carrier cost: £2.20</p>
+                <p className="text-sm">• Handling fee (25%): £0.55</p>
+                <p className="text-sm font-semibold text-jungle-600 mt-2">• Your total: £2.75</p>
+              </div>
             </div>
           </div>
         </section>

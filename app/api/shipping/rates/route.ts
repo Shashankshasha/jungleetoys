@@ -109,9 +109,8 @@ export async function POST(req: NextRequest) {
     // Add 50% markup to all rates and format for customer
     const markedUpRates = rates
       .filter((rate: any) => {
-        // Filter for UK carriers only (Royal Mail, DPD UK, and Evri UK)
-        const isValid = rate.provider === 'Royal Mail' ||
-                       rate.provider === 'DPD UK' ||
+        // Filter for UK national carriers only (DPD UK and Evri UK)
+        const isValid = rate.provider === 'DPD UK' ||
                        rate.provider === 'Evri' ||
                        rate.provider === 'Evri UK';
         console.log(`🔍 Checking rate: ${rate.provider} - ${isValid ? '✅ MATCH' : '❌ FILTERED OUT'}`);
@@ -152,7 +151,7 @@ export async function POST(req: NextRequest) {
           },
         ],
         debug: {
-          message: 'No Royal Mail, DPD UK, or Evri UK rates available',
+          message: 'No DPD UK or Evri UK rates available',
           availableProviders: rates.map((r: any) => r.provider),
           totalRatesReceived: rates.length,
         },

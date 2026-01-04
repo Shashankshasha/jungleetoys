@@ -262,7 +262,7 @@ export default function PrivacyPolicyPage() {
               If you have any questions about this privacy policy or how we handle your personal data, please contact us:
             </p>
             <div className="mt-4 space-y-2 text-gray-700">
-              <p>📧 Email: <a href="mailto:hello@jungleetoys.com" className="text-jungle-600 hover:underline">hello@jungleetoys.com</a></p>
+              <p>📧 Email: <a href="mailto:grace@jungleetoys.com" className="text-jungle-600 hover:underline">grace@jungleetoys.com</a></p>
               <p>📞 Phone: <a href="tel:+441234567890" className="text-jungle-600 hover:underline">+44 1234 567 890</a></p>
               <p>📍 Address: 123 Toy Street, Crawley, West Sussex, RH10 1AB, UK</p>
             </div>

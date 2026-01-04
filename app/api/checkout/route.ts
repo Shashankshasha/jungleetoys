@@ -8,12 +8,12 @@ export async function POST(req: NextRequest) {
 
     // Calculate totals
     const subtotal = items.reduce(
-      (sum: number, item: { price: number; quantity: number }) => 
+      (sum: number, item: { price: number; quantity: number }) =>
         sum + item.price * item.quantity,
       0
     );
-    
-    const shippingCost = subtotal >= 50 ? 0 : subtotal < 20 ? 4.99 : 2.99;
+
+    const shippingCost = subtotal >= 30 ? 0 : subtotal < 20 ? 4.99 : 2.99;
     const giftWrapCost = giftWrap ? 3.99 : 0;
 
     // Create line items for Stripe

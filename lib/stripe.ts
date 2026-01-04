@@ -18,15 +18,15 @@ export const getStripe = () => {
 
 // Calculate shipping based on order total and location
 export const calculateShipping = (subtotal: number, country: string): number => {
-  // Free shipping over £50 for UK
-  if (country === 'GB' && subtotal >= 50) {
+  // Free shipping over £30 for UK
+  if (country === 'GB' && subtotal >= 30) {
     return 0;
   }
 
   // UK shipping rates
   if (country === 'GB') {
     if (subtotal < 20) return 4.99;
-    if (subtotal < 50) return 2.99;
+    if (subtotal < 30) return 2.99;
     return 0;
   }
 

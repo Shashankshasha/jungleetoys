@@ -24,19 +24,53 @@ export async function POST(req: NextRequest) {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
-      
+
       // Create order in database
       try {
+        // Fetch line items from Stripe
+        const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
+          limit: 100,
+        });
+
+        // Calculate subtotal and shipping
+        let subtotal = 0;
+        let shipping = 0;
+        const items: any[] = [];
+
+        lineItems.data.forEach((item) => {
+          const itemTotal = (item.amount_total || 0) / 100;
+          const itemName = item.description || '';
+
+          if (itemName.toLowerCase().includes('shipping')) {
+            shipping = itemTotal;
+          } else if (!itemName.toLowerCase().includes('gift wrap')) {
+            subtotal += itemTotal;
+          }
+
+          items.push({
+            name: itemName,
+            quantity: item.quantity || 1,
+            price: (item.price?.unit_amount || 0) / 100,
+            total: itemTotal,
+          });
+        });
+
         const { error } = await (supabaseAdmin as any).from('orders').insert({
           stripe_session_id: session.id,
           stripe_payment_intent_id: session.payment_intent as string,
           customer_email: session.customer_email,
-          customer_name: session.metadata?.customerName,
+          customer_name: session.metadata?.customerName || session.customer_details?.name,
           amount_total: session.amount_total ? session.amount_total / 100 : 0,
-          currency: session.currency,
+          subtotal,
+          shipping,
+          currency: session.currency?.toUpperCase() || 'GBP',
           status: 'paid',
-          shipping_address: session.shipping_details?.address,
-          metadata: session.metadata,
+          shipping_address: session.shipping_details?.address || session.customer_details?.address,
+          items: items,
+          metadata: {
+            ...session.metadata,
+            customer_phone: session.customer_details?.phone,
+          },
           created_at: new Date().toISOString(),
         });
 
@@ -44,6 +78,9 @@ export async function POST(req: NextRequest) {
           console.error('Failed to create order:', error);
         } else {
           console.log('Order created successfully:', session.id);
+
+          // TODO: Send confirmation email
+          // TODO: Create shipping label
         }
       } catch (dbError) {
         console.error('Database error:', dbError);

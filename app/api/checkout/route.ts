@@ -3,6 +3,23 @@ import { stripe } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
   try {
+    // Validate Stripe is configured
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('STRIPE_SECRET_KEY is not configured');
+      return NextResponse.json(
+        { error: 'Stripe is not configured. Please add STRIPE_SECRET_KEY environment variable.' },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.NEXT_PUBLIC_SITE_URL) {
+      console.error('NEXT_PUBLIC_SITE_URL is not configured');
+      return NextResponse.json(
+        { error: 'Site URL is not configured. Please add NEXT_PUBLIC_SITE_URL environment variable.' },
+        { status: 500 }
+      );
+    }
+
     const body = await req.json();
     const { items, shipping, giftWrap, selectedShippingRate } = body;
 
@@ -79,10 +96,11 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Checkout error:', error);
+    const errorMessage = error?.message || 'Failed to create checkout session';
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { error: `Stripe Error: ${errorMessage}` },
       { status: 500 }
     );
   }

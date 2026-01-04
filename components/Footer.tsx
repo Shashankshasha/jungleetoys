@@ -183,27 +183,27 @@ export default function Footer() {
             <h4 className="font-display text-lg font-bold mb-4">Help</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/help/delivery" className="text-jungle-300 hover:text-white transition-colors">
+                <Link href="/delivery" className="text-jungle-300 hover:text-white transition-colors">
                   Delivery Information
                 </Link>
               </li>
               <li>
-                <Link href="/help/returns" className="text-jungle-300 hover:text-white transition-colors">
+                <Link href="/returns" className="text-jungle-300 hover:text-white transition-colors">
                   Returns & Refunds
                 </Link>
               </li>
               <li>
-                <Link href="/help/faq" className="text-jungle-300 hover:text-white transition-colors">
+                <Link href="/faq" className="text-jungle-300 hover:text-white transition-colors">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/help/contact" className="text-jungle-300 hover:text-white transition-colors">
+                <Link href="/contact" className="text-jungle-300 hover:text-white transition-colors">
                   Contact Us
                 </Link>
               </li>
               <li>
-                <Link href="/help/size-guide" className="text-jungle-300 hover:text-white transition-colors">
+                <Link href="/age-guide" className="text-jungle-300 hover:text-white transition-colors">
                   Age Guide
                 </Link>
               </li>

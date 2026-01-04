@@ -79,6 +79,9 @@ export default function AdminPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [offersLoading, setOffersLoading] = useState(false);
   const [offersFilter, setOffersFilter] = useState<string>('all');
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
   // Fetch products
   const fetchProducts = async () => {
@@ -106,6 +109,20 @@ export default function AdminPage() {
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  };
+
+  // Fetch orders
+  const fetchOrders = async () => {
+    try {
+      setOrdersLoading(true);
+      const response = await fetch('/api/admin/orders');
+      const data = await response.json();
+      setOrders(data.orders || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setOrdersLoading(false);
     }
   };
 
@@ -237,6 +254,13 @@ export default function AdminPage() {
       fetchOffers();
     }
   }, [offersFilter, activeTab]);
+
+  // Fetch orders when tab becomes active
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'orders') {
+      fetchOrders();
+    }
+  }, [activeTab]);
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -595,10 +619,199 @@ export default function AdminPage() {
 
         {/* Orders Tab */}
         {activeTab === 'orders' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-            <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No orders yet</h3>
-            <p className="text-gray-500">Orders will appear here when customers make purchases</p>
+          <div className="space-y-6">
+            {ordersLoading ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <Loader2 className="h-12 w-12 text-jungle-600 mx-auto mb-4 animate-spin" />
+                <p className="text-gray-500">Loading orders...</p>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No orders yet</h3>
+                <p className="text-gray-500">Orders will appear here when customers make purchases</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100">
+                  <h2 className="text-xl font-bold text-gray-900">Orders ({orders.length})</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-100">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Order</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Customer</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Items</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Total</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {orders.map((order) => (
+                        <tr key={order.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4">
+                            <div className="font-mono text-sm font-semibold text-jungle-600">
+                              {order.order_number || 'N/A'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div>
+                              <div className="font-medium text-gray-900">{order.customer_name || 'N/A'}</div>
+                              <div className="text-sm text-gray-500">{order.customer_email}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900">
+                              {order.items ? JSON.parse(order.items).length : 0} item(s)
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-semibold text-gray-900">
+                              {formatPrice(order.amount_total)}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold
+                              ${order.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                                order.status === 'delivered' ? 'bg-purple-100 text-purple-800' :
+                                'bg-gray-100 text-gray-800'}`}>
+                              {order.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-600">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={() => setSelectedOrder(order)}
+                              className="text-jungle-600 hover:text-jungle-700 font-medium text-sm"
+                            >
+                              View Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Order Details Modal */}
+            {selectedOrder && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                  <div className="p-6 border-b border-gray-100 sticky top-0 bg-white">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">Order Details</h2>
+                        <p className="text-sm text-gray-500 font-mono">{selectedOrder.order_number}</p>
+                      </div>
+                      <button
+                        onClick={() => setSelectedOrder(null)}
+                        className="p-2 hover:bg-gray-100 rounded-full"
+                      >
+                        <X className="h-6 w-6" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-6">
+                    {/* Customer Info */}
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">Customer Information</h3>
+                      <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-gray-500" />
+                          <span className="text-gray-900">{selectedOrder.customer_name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-gray-500" />
+                          <span className="text-gray-600">{selectedOrder.customer_email}</span>
+                        </div>
+                        {selectedOrder.metadata?.customer_phone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-gray-500" />
+                            <span className="text-gray-600">{selectedOrder.metadata.customer_phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Shipping Address */}
+                    {selectedOrder.shipping_address && (
+                      <div>
+                        <h3 className="font-semibold text-gray-900 mb-3">Shipping Address</h3>
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <p className="text-gray-900">
+                            {selectedOrder.shipping_address.line1}
+                            {selectedOrder.shipping_address.line2 && <>, {selectedOrder.shipping_address.line2}</>}
+                          </p>
+                          <p className="text-gray-900">
+                            {selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.postal_code}
+                          </p>
+                          <p className="text-gray-900">{selectedOrder.shipping_address.country}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Order Items */}
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
+                      <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                        {selectedOrder.items && JSON.parse(selectedOrder.items).map((item: any, idx: number) => (
+                          <div key={idx} className="flex justify-between items-center">
+                            <div>
+                              <div className="font-medium text-gray-900">{item.name}</div>
+                              <div className="text-sm text-gray-500">Qty: {item.quantity}</div>
+                            </div>
+                            <div className="font-semibold text-gray-900">{formatPrice(item.total)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Order Summary */}
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">Order Summary</h3>
+                      <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Subtotal</span>
+                          <span className="text-gray-900">{formatPrice(selectedOrder.subtotal)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Shipping</span>
+                          <span className="text-gray-900">
+                            {selectedOrder.shipping === 0 ? 'FREE' : formatPrice(selectedOrder.shipping)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-t border-gray-200 pt-2">
+                          <span className="font-semibold text-gray-900">Total</span>
+                          <span className="font-bold text-jungle-600">{formatPrice(selectedOrder.amount_total)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Shipping Label Action */}
+                    <div className="pt-4 border-t border-gray-200">
+                      <button
+                        className="w-full btn-jungle flex items-center justify-center gap-2"
+                        onClick={() => alert('Shipping label generation will be added next!')}
+                      >
+                        <Package className="h-5 w-5" />
+                        Generate Shipping Label
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

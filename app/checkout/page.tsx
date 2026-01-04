@@ -108,33 +108,39 @@ export default function CheckoutPage() {
     setError('');
 
     try {
-      // In production, call your API to create Stripe checkout session
+      // Call API to create Stripe checkout session
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: items.map(item => ({
             productId: item.product.id,
+            name: item.product.name,
             quantity: item.quantity,
             price: item.product.price,
           })),
           shipping,
           giftWrap,
+          selectedShippingRate: selectedRate,
         }),
       });
 
       const data = await response.json();
 
+      if (data.error) {
+        setError(data.error);
+        return;
+      }
+
       if (data.url) {
         // Redirect to Stripe Checkout
         window.location.href = data.url;
       } else {
-        // For demo purposes, simulate success
-        setStep('confirmation');
-        clearCart();
+        setError('Failed to create checkout session. Please try again.');
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');
+      console.error('Checkout error:', err);
     } finally {
       setIsLoading(false);
     }

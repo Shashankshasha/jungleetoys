@@ -1,8 +1,24 @@
 import Stripe from 'stripe';
 import { loadStripe, Stripe as StripeJS } from '@stripe/stripe-js';
 
-// Server-side Stripe client
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Server-side Stripe client (lazy initialization)
+let stripeInstance: Stripe | null = null;
+
+export const getStripeInstance = (): Stripe => {
+  if (!stripeInstance) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error('STRIPE_SECRET_KEY is not configured');
+    }
+    stripeInstance = new Stripe(secretKey, {
+      apiVersion: '2024-06-20',
+    });
+  }
+  return stripeInstance;
+};
+
+// For backward compatibility
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
   apiVersion: '2024-06-20',
 });
 

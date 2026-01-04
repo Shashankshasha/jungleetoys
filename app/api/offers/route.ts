@@ -239,7 +239,7 @@ export async function PATCH(req: NextRequest) {
                 },
                 quantity: 1,
               },
-            ],
+            ] as any,
             after_completion: {
               type: 'redirect',
               redirect: {

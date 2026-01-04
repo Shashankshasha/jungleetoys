@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { CheckCircle, Package, Mail, Home } from 'lucide-react';
+import { CheckCircle, Package, Mail, Home, Loader2 } from 'lucide-react';
 
-export default function CheckoutSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const [orderNumber, setOrderNumber] = useState('');
@@ -88,5 +88,19 @@ export default function CheckoutSuccessPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-b from-white to-jungle-50 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 text-jungle-600 animate-spin" />
+        </div>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
   );
 }

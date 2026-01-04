@@ -226,8 +226,8 @@ export default function TermsPage() {
             </p>
             <div className="space-y-2 text-gray-700">
               <p>📧 Email: <a href="mailto:grace@jungleetoys.com" className="text-jungle-600 hover:underline">grace@jungleetoys.com</a></p>
-              <p>📞 Phone: <a href="tel:+441234567890" className="text-jungle-600 hover:underline">+44 1234 567 890</a></p>
-              <p>📍 Address: 123 Toy Street, Crawley, West Sussex, RH10 1AB, UK</p>
+              <p>📞 Phone: <a href="tel:+447342224136" className="text-jungle-600 hover:underline">+44 7342224136</a></p>
+              <p>📍 Address: 483 Green Lanes, London, N13 4BS, UK</p>
             </div>
           </section>
 

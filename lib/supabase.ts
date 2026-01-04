@@ -11,17 +11,27 @@ if (typeof window !== 'undefined') {
   console.log('URL value:', supabaseUrl?.substring(0, 30) + '...');
 }
 
+// Only check credentials at runtime in browser, not during build
+// Allow build to proceed without credentials on server side
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(`Missing Supabase credentials. URL: ${!!supabaseUrl}, Key: ${!!supabaseAnonKey}`);
+  // Only throw error in browser (client-side)
+  if (typeof window !== 'undefined') {
+    throw new Error(`Missing Supabase credentials. URL: ${!!supabaseUrl}, Key: ${!!supabaseAnonKey}`);
+  }
+  // During server build or when credentials missing, just warn
+  console.warn('⚠️ Supabase credentials not available - using placeholders');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key'
+);
 
 // Server-side client with service role (only available on server)
 // This should NEVER be imported in client components
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const _supabaseAdmin = serviceRoleKey
+const _supabaseAdmin = serviceRoleKey && supabaseUrl
   ? createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,

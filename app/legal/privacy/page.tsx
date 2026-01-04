@@ -56,9 +56,9 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-2xl font-display font-bold text-gray-900 mb-4">Contact Details</h2>
             <div className="bg-jungle-50 p-6 rounded-xl">
               <p className="font-semibold text-gray-900 mb-2">JungleeToys</p>
-              <p className="text-gray-700">123 Toy Street</p>
-              <p className="text-gray-700">Crawley, West Sussex</p>
-              <p className="text-gray-700">RH10 1AB, UK</p>
+              <p className="text-gray-700">483 Green Lanes</p>
+              <p className="text-gray-700">London, N13 4BS</p>
+              <p className="text-gray-700">UK</p>
               <p className="text-gray-700 mt-4">Email: <a href="mailto:grace@jungleetoys.com" className="text-jungle-600 hover:underline">grace@jungleetoys.com</a></p>
             </div>
           </section>
@@ -262,9 +262,9 @@ export default function PrivacyPolicyPage() {
               If you have any questions about this privacy policy or how we handle your personal data, please contact us:
             </p>
             <div className="mt-4 space-y-2 text-gray-700">
-              <p>📧 Email: <a href="mailto:hello@jungleetoys.com" className="text-jungle-600 hover:underline">hello@jungleetoys.com</a></p>
-              <p>📞 Phone: <a href="tel:+441234567890" className="text-jungle-600 hover:underline">+44 1234 567 890</a></p>
-              <p>📍 Address: 123 Toy Street, Crawley, West Sussex, RH10 1AB, UK</p>
+              <p>📧 Email: <a href="mailto:grace@jungleetoys.com" className="text-jungle-600 hover:underline">grace@jungleetoys.com</a></p>
+              <p>📞 Phone: <a href="tel:+447342224136" className="text-jungle-600 hover:underline">+44 7342224136</a></p>
+              <p>📍 Address: 483 Green Lanes, London, N13 4BS, UK</p>
             </div>
           </section>
 

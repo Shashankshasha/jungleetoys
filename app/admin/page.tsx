@@ -932,6 +932,30 @@ export default function AdminPage() {
                         placeholder="https://twitter.com/jungleetoys"
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        TikTok URL
+                      </label>
+                      <input
+                        type="url"
+                        value={settings.tiktok_url || ''}
+                        onChange={(e) => setSettings({ ...settings, tiktok_url: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                        placeholder="https://tiktok.com/@jungleetoys"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Pinterest URL
+                      </label>
+                      <input
+                        type="url"
+                        value={settings.pinterest_url || ''}
+                        onChange={(e) => setSettings({ ...settings, pinterest_url: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                        placeholder="https://pinterest.com/jungleetoys"
+                      />
+                    </div>
                   </div>
                 </div>
 

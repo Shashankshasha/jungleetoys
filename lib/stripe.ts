@@ -23,11 +23,9 @@ export const calculateShipping = (subtotal: number, country: string): number => 
     return 0;
   }
 
-  // UK shipping rates
+  // UK shipping rates - Flat £3.99 for orders under £30
   if (country === 'GB') {
-    if (subtotal < 20) return 4.99;
-    if (subtotal < 30) return 2.99;
-    return 0;
+    return 3.99;
   }
 
   // EU shipping

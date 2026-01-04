@@ -29,10 +29,13 @@ interface ShippingForm {
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
-  const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping');
+  const [step, setStep] = useState<'shipping' | 'shipping-options' | 'payment' | 'confirmation'>('shipping');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [giftWrap, setGiftWrap] = useState(false);
+  const [shippingRates, setShippingRates] = useState<any[]>([]);
+  const [selectedRate, setSelectedRate] = useState<any | null>(null);
+  const [loadingRates, setLoadingRates] = useState(false);
 
   const [shipping, setShipping] = useState<ShippingForm>({
     email: '',
@@ -47,13 +50,57 @@ export default function CheckoutPage() {
   });
 
   const cartSubtotal = subtotal();
-  const shippingCost = cartSubtotal >= 30 ? 0 : cartSubtotal < 20 ? 4.99 : 2.99;
+  const shippingCost = cartSubtotal >= 30 ? 0 : selectedRate ? parseFloat(selectedRate.amount) : 3.99;
   const giftWrapCost = giftWrap ? 3.99 : 0;
   const total = cartSubtotal + shippingCost + giftWrapCost;
 
-  const handleShippingSubmit = (e: React.FormEvent) => {
+  const handleShippingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStep('payment');
+
+    // If free shipping (over £30), skip to payment
+    if (cartSubtotal >= 30) {
+      setStep('payment');
+      return;
+    }
+
+    // Fetch shipping rates
+    setLoadingRates(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/shipping/rates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          toAddress: {
+            name: `${shipping.firstName} ${shipping.lastName}`,
+            street1: shipping.address1,
+            street2: shipping.address2 || '',
+            city: shipping.city,
+            state: '',
+            zip: shipping.postcode,
+            country: shipping.country,
+            phone: shipping.phone || '',
+            email: shipping.email,
+          },
+          weight: '0.5', // Default weight - adjust based on cart items
+        }),
+      });
+
+      const data = await response.json();
+      setShippingRates(data.rates || []);
+
+      // Auto-select cheapest option
+      if (data.rates && data.rates.length > 0) {
+        setSelectedRate(data.rates[0]);
+      }
+
+      setStep('shipping-options');
+    } catch (err) {
+      setError('Failed to load shipping options. Please try again.');
+    } finally {
+      setLoadingRates(false);
+    }
   };
 
   const handlePayment = async () => {
@@ -132,24 +179,29 @@ export default function CheckoutPage() {
       <div className="bg-white border-b border-jungle-100">
         <div className="max-w-3xl mx-auto px-4 py-4">
           <div className="flex items-center justify-center gap-4">
-            {['shipping', 'payment', 'confirmation'].map((s, idx) => (
-              <div key={s} className="flex items-center">
+            {[
+              { key: 'shipping', label: 'Address' },
+              { key: 'shipping-options', label: 'Shipping' },
+              { key: 'payment', label: 'Payment' },
+              { key: 'confirmation', label: 'Done' }
+            ].map((s, idx) => (
+              <div key={s.key} className="flex items-center">
                 <div
                   className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold text-sm
-                            ${step === s || (s === 'shipping' && step !== 'shipping')
+                            ${step === s.key || (idx === 0 && step !== 'shipping') || (idx === 1 && (step === 'payment' || step === 'confirmation')) || (idx === 2 && step === 'confirmation')
                               ? 'bg-jungle-600 text-white'
                               : 'bg-jungle-100 text-jungle-600'}`}
                 >
                   {idx + 1}
                 </div>
                 <span
-                  className={`ml-2 text-sm font-medium capitalize hidden sm:inline
-                            ${step === s ? 'text-jungle-600' : 'text-gray-500'}`}
+                  className={`ml-2 text-sm font-medium hidden sm:inline
+                            ${step === s.key ? 'text-jungle-600' : 'text-gray-500'}`}
                 >
-                  {s}
+                  {s.label}
                 </span>
-                {idx < 2 && (
-                  <div className="w-12 sm:w-24 h-0.5 bg-jungle-100 mx-2 sm:mx-4" />
+                {idx < 3 && (
+                  <div className="w-8 sm:w-16 h-0.5 bg-jungle-100 mx-1 sm:mx-2" />
                 )}
               </div>
             ))}
@@ -325,14 +377,14 @@ export default function CheckoutPage() {
                       </label>
                     </div>
 
-                    <button type="submit" className="w-full btn-jungle">
-                      Continue to Payment
+                    <button type="submit" className="w-full btn-jungle" disabled={loadingRates}>
+                      {loadingRates ? 'Loading shipping options...' : 'Continue to Shipping Options'}
                     </button>
                   </form>
                 </motion.div>
               )}
 
-              {step === 'payment' && (
+              {step === 'shipping-options' && (
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -343,6 +395,72 @@ export default function CheckoutPage() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Back to Shipping
+                  </button>
+
+                  <h2 className="font-display text-2xl font-bold mb-6">Choose Shipping Method</h2>
+
+                  {error && (
+                    <div className="bg-red-50 text-red-700 p-4 rounded-xl mb-6 flex items-center gap-3">
+                      <AlertCircle className="h-5 w-5 shrink-0" />
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="space-y-4 mb-6">
+                    {shippingRates.map((rate) => (
+                      <button
+                        key={rate.id}
+                        onClick={() => setSelectedRate(rate)}
+                        className={`w-full text-left p-4 rounded-xl border-2 transition-all
+                          ${selectedRate?.id === rate.id
+                            ? 'border-jungle-600 bg-jungle-50'
+                            : 'border-gray-200 hover:border-jungle-300'}`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
+                              ${selectedRate?.id === rate.id
+                                ? 'border-jungle-600 bg-jungle-600'
+                                : 'border-gray-300'}`}>
+                              {selectedRate?.id === rate.id && (
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">{rate.provider}</p>
+                              <p className="text-sm text-gray-600">{rate.serviceName}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-jungle-600">{formatPrice(parseFloat(rate.amount))}</p>
+                            <p className="text-xs text-gray-500">{rate.estimatedDays} days</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setStep('payment')}
+                    disabled={!selectedRate}
+                    className="w-full btn-jungle disabled:opacity-50"
+                  >
+                    Continue to Payment
+                  </button>
+                </motion.div>
+              )}
+
+              {step === 'payment' && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                >
+                  <button
+                    onClick={() => setStep(cartSubtotal >= 30 ? 'shipping' : 'shipping-options')}
+                    className="flex items-center gap-2 text-gray-600 hover:text-jungle-600 mb-6"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Back to {cartSubtotal >= 30 ? 'Shipping' : 'Shipping Options'}
                   </button>
 
                   <h2 className="font-display text-2xl font-bold mb-6">Payment</h2>

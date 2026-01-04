@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripeInstance } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
   try {
-    // Validate Stripe is configured
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('STRIPE_SECRET_KEY is not configured');
-      return NextResponse.json(
-        { error: 'Stripe is not configured. Please add STRIPE_SECRET_KEY environment variable.' },
-        { status: 500 }
-      );
-    }
+    // Get Stripe instance (this will validate the key exists)
+    const stripe = getStripeInstance();
 
     if (!process.env.NEXT_PUBLIC_SITE_URL) {
       console.error('NEXT_PUBLIC_SITE_URL is not configured');

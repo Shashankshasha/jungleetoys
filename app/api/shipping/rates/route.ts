@@ -46,6 +46,13 @@ export async function POST(req: NextRequest) {
       mass_unit: 'kg',
     };
 
+    // Log request details
+    console.log('🚀 Shippo Request:', {
+      from: fromAddress,
+      to: toAddress,
+      parcel,
+    });
+
     // Create shipment to get rates
     const shipmentResponse = await fetch('https://api.goshippo.com/shipments/', {
       method: 'POST',
@@ -61,8 +68,14 @@ export async function POST(req: NextRequest) {
       }),
     });
 
+    console.log('📦 Shippo Response Status:', shipmentResponse.status);
+
     if (!shipmentResponse.ok) {
-      console.error('Shippo API error');
+      const errorText = await shipmentResponse.text();
+      console.error('❌ Shippo API error:', {
+        status: shipmentResponse.status,
+        error: errorText,
+      });
       // Fallback to flat rate
       return NextResponse.json({
         rates: [
@@ -75,22 +88,38 @@ export async function POST(req: NextRequest) {
             estimatedDays: '3-5',
           },
         ],
+        debug: {
+          error: 'Shippo API returned error',
+          status: shipmentResponse.status,
+          details: errorText,
+        },
       });
     }
 
     const shipment = await shipmentResponse.json();
+    console.log('📊 Shippo Full Response:', JSON.stringify(shipment, null, 2));
+
     const rates = shipment.rates || [];
+    console.log('📋 Available rates count:', rates.length);
+
+    if (rates.length > 0) {
+      console.log('🏷️ All available providers:', rates.map((r: any) => r.provider));
+    }
 
     // Add 50% markup to all rates and format for customer
     const markedUpRates = rates
-      .filter((rate: any) =>
-        rate.provider === 'Royal Mail' ||
-        rate.provider === 'DPD' ||
-        rate.provider === 'Parcelforce'
-      )
+      .filter((rate: any) => {
+        const isValid = rate.provider === 'Royal Mail' ||
+                       rate.provider === 'DPD' ||
+                       rate.provider === 'Parcelforce';
+        console.log(`🔍 Checking rate: ${rate.provider} - ${isValid ? '✅ MATCH' : '❌ FILTERED OUT'}`);
+        return isValid;
+      })
       .map((rate: any) => {
         const originalAmount = parseFloat(rate.amount);
         const markedUpAmount = (originalAmount * 1.5).toFixed(2); // Add 50% markup
+
+        console.log(`💰 Marking up rate: ${rate.provider} ${rate.servicelevel?.name} - £${rate.amount} → £${markedUpAmount}`);
 
         return {
           id: rate.object_id,
@@ -104,8 +133,11 @@ export async function POST(req: NextRequest) {
       })
       .sort((a: any, b: any) => parseFloat(a.amount) - parseFloat(b.amount)); // Sort by price
 
+    console.log(`✅ Final marked up rates count: ${markedUpRates.length}`);
+
     // If no rates available, use fallback
     if (markedUpRates.length === 0) {
+      console.log('⚠️ No matching rates found, using fallback');
       return NextResponse.json({
         rates: [
           {
@@ -117,9 +149,15 @@ export async function POST(req: NextRequest) {
             estimatedDays: '3-5',
           },
         ],
+        debug: {
+          message: 'No Royal Mail, DPD, or Parcelforce rates available',
+          availableProviders: rates.map((r: any) => r.provider),
+          totalRatesReceived: rates.length,
+        },
       });
     }
 
+    console.log('🎉 Returning marked up rates:', markedUpRates);
     return NextResponse.json({ rates: markedUpRates });
   } catch (error) {
     console.error('Shipping rates API error:', error);

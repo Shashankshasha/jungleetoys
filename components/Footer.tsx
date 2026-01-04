@@ -1,7 +1,40 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { TreePalm, Mail, Phone, MapPin, Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
+import { TreePalm, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+
+interface StoreSettings {
+  store_name: string;
+  support_email: string;
+  phone: string;
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  postal_code: string;
+  country: string;
+  facebook_url: string;
+  instagram_url: string;
+  twitter_url: string;
+}
 
 export default function Footer() {
+  const [settings, setSettings] = useState<StoreSettings | null>(null);
+
+  useEffect(() => {
+    // Fetch store settings
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => setSettings(data))
+      .catch(err => console.error('Error fetching settings:', err));
+  }, []);
+
+  // Use settings if available, otherwise use defaults
+  const storeName = settings?.store_name || 'JungleeToys';
+  const email = settings?.support_email || 'hello@jungleetoys.com';
+  const phone = settings?.phone || '+44 1234 567 890';
+  const address = settings ? `${settings.address_line1}${settings.address_line2 ? '\n' + settings.address_line2 : ''}\n${settings.city}${settings.postal_code ? ', ' + settings.postal_code : ''}${settings.country ? ', ' + settings.country : ''}` : '123 Toy Street\nCrawley, West Sussex\nRH10 1AB, UK';
+
   return (
     <footer className="bg-gradient-to-b from-jungle-900 to-jungle-950 text-white">
       {/* Newsletter Section */}
@@ -42,25 +75,46 @@ export default function Footer() {
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4">
               <TreePalm className="h-8 w-8 text-jungle-400" />
-              <span className="font-display text-2xl font-bold">JungleeToys</span>
+              <span className="font-display text-2xl font-bold">{storeName}</span>
             </Link>
             <p className="text-jungle-300 mb-4">
               Your one-stop shop for amazing toys! We bring joy to children of all ages with our
               carefully curated collection of fun and educational toys.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="p-2 bg-jungle-800 hover:bg-jungle-700 rounded-full transition-colors">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a href="#" className="p-2 bg-jungle-800 hover:bg-jungle-700 rounded-full transition-colors">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="p-2 bg-jungle-800 hover:bg-jungle-700 rounded-full transition-colors">
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a href="#" className="p-2 bg-jungle-800 hover:bg-jungle-700 rounded-full transition-colors">
-                <Youtube className="h-5 w-5" />
-              </a>
+              {settings?.facebook_url && (
+                <a
+                  href={settings.facebook_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-jungle-800 hover:bg-jungle-700 rounded-full transition-colors"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="h-5 w-5" />
+                </a>
+              )}
+              {settings?.instagram_url && (
+                <a
+                  href={settings.instagram_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-jungle-800 hover:bg-jungle-700 rounded-full transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="h-5 w-5" />
+                </a>
+              )}
+              {settings?.twitter_url && (
+                <a
+                  href={settings.twitter_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-jungle-800 hover:bg-jungle-700 rounded-full transition-colors"
+                  aria-label="Twitter"
+                >
+                  <Twitter className="h-5 w-5" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -134,22 +188,20 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-jungle-400 mt-0.5 shrink-0" />
-                <span className="text-jungle-300">
-                  123 Toy Street<br />
-                  Crawley, West Sussex<br />
-                  RH10 1AB, UK
+                <span className="text-jungle-300" style={{ whiteSpace: 'pre-line' }}>
+                  {address}
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-jungle-400 shrink-0" />
-                <a href="tel:+441onal234567890" className="text-jungle-300 hover:text-white transition-colors">
-                  +44 1234 567 890
+                <a href={`tel:${phone.replace(/\s/g, '')}`} className="text-jungle-300 hover:text-white transition-colors">
+                  {phone}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-jungle-400 shrink-0" />
-                <a href="mailto:hello@jungleetoys.com" className="text-jungle-300 hover:text-white transition-colors">
-                  hello@jungleetoys.com
+                <a href={`mailto:${email}`} className="text-jungle-300 hover:text-white transition-colors">
+                  {email}
                 </a>
               </li>
             </ul>
@@ -162,7 +214,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-jungle-400 text-sm text-center md:text-left">
-              © {new Date().getFullYear()} JungleeToys. All rights reserved. 🌴
+              © {new Date().getFullYear()} {storeName}. All rights reserved. 🌴
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-sm">
               <Link href="/legal/privacy" className="text-jungle-400 hover:text-white transition-colors">

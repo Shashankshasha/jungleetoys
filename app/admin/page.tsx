@@ -7,6 +7,7 @@ import {
   Package,
   ShoppingCart,
   Users,
+  User,
   TrendingUp,
   Plus,
   Search,

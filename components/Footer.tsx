@@ -33,9 +33,9 @@ export default function Footer() {
 
   // Use settings if available, otherwise use defaults
   const storeName = settings?.store_name || 'JungleeToys';
-  const email = settings?.support_email || 'hello@jungleetoys.com';
-  const phone = settings?.phone || '+44 1234 567 890';
-  const address = settings ? `${settings.address_line1}${settings.address_line2 ? '\n' + settings.address_line2 : ''}\n${settings.city}${settings.postal_code ? ', ' + settings.postal_code : ''}${settings.country ? ', ' + settings.country : ''}` : '123 Toy Street\nCrawley, West Sussex\nRH10 1AB, UK';
+  const email = settings?.support_email || 'grace@jungleetoys.com';
+  const phone = settings?.phone || '+44 7342224136';
+  const address = settings ? `${settings.address_line1}${settings.address_line2 ? '\n' + settings.address_line2 : ''}\n${settings.city}${settings.postal_code ? ', ' + settings.postal_code : ''}${settings.country ? ', ' + settings.country : ''}` : '483 Green Lanes\nLondon, N13 4BS\nUK';
 
   return (
     <footer className="bg-gradient-to-b from-jungle-900 to-jungle-950 text-white">

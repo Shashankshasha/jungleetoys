@@ -45,7 +45,7 @@ export default function ShippingPage() {
                     <p className="font-medium text-gray-900">📮 Royal Mail 2nd Class</p>
                     <p className="text-sm text-gray-500">Most economical option</p>
                   </div>
-                  <span className="text-gray-700 font-semibold">From £2.75</span>
+                  <span className="text-gray-700 font-semibold">From £3.30</span>
                 </div>
 
                 <div className="flex items-center justify-between bg-white p-3 rounded-lg">
@@ -53,7 +53,7 @@ export default function ShippingPage() {
                     <p className="font-medium text-gray-900">📦 Royal Mail 1st Class</p>
                     <p className="text-sm text-gray-500">Faster delivery</p>
                   </div>
-                  <span className="text-gray-700 font-semibold">From £3.50</span>
+                  <span className="text-gray-700 font-semibold">From £4.50</span>
                 </div>
 
                 <div className="flex items-center justify-between bg-white p-3 rounded-lg">
@@ -61,14 +61,14 @@ export default function ShippingPage() {
                     <p className="font-medium text-gray-900">🚚 DPD / Parcelforce</p>
                     <p className="text-sm text-gray-500">Tracked delivery</p>
                   </div>
-                  <span className="text-gray-700 font-semibold">From £4.50</span>
+                  <span className="text-gray-700 font-semibold">From £6.00</span>
                 </div>
               </div>
 
               <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-900">
                   <strong>💡 Pro Tip:</strong> Final shipping prices are calculated at checkout based on your location and parcel weight.
-                  All prices include a 25% handling fee to cover packaging and processing.
+                  All prices include a 50% handling fee to cover packaging, processing, and delivery.
                 </p>
               </div>
             </div>
@@ -150,9 +150,9 @@ export default function ShippingPage() {
             </div>
 
             <div className="bg-jungle-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-2">25% Handling Fee Explained</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">50% Handling Fee Explained</h3>
               <p className="mb-3">
-                All shipping prices include a 25% handling fee to cover:
+                All shipping prices include a 50% handling fee to cover:
               </p>
               <ul className="space-y-2">
                 <li className="flex items-start gap-2">
@@ -179,8 +179,8 @@ export default function ShippingPage() {
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="mb-2">If carrier charges <strong>£2.20</strong> for shipping:</p>
                 <p className="text-sm">• Carrier cost: £2.20</p>
-                <p className="text-sm">• Handling fee (25%): £0.55</p>
-                <p className="text-sm font-semibold text-jungle-600 mt-2">• Your total: £2.75</p>
+                <p className="text-sm">• Handling fee (50%): £1.10</p>
+                <p className="text-sm font-semibold text-jungle-600 mt-2">• Your total: £3.30</p>
               </div>
             </div>
           </div>

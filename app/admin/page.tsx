@@ -291,6 +291,51 @@ export default function AdminPage() {
     }
   };
 
+  const handleGenerateShippingLabel = async (order: any) => {
+    try {
+      setOrdersLoading(true);
+      const response = await fetch('/api/admin/shipping-label', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.id,
+          shippingAddress: order.shipping_address,
+          items: order.items,
+          weight: '0.5', // Default weight in kg - adjust based on items
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Open label PDF in new window
+        window.open(data.labelUrl, '_blank');
+
+        // Update order with tracking number
+        await fetch('/api/admin/orders', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: order.id,
+            status: 'shipped',
+            trackingNumber: data.trackingNumber,
+          }),
+        });
+
+        alert(`Label generated! Tracking: ${data.trackingNumber}\nCost: £${data.cost}`);
+        fetchOrders(); // Refresh orders
+        setSelectedOrder(null);
+      } else {
+        alert(data.error || 'Failed to generate shipping label');
+      }
+    } catch (error) {
+      console.error('Shipping label error:', error);
+      alert('Error generating shipping label. Check console for details.');
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
   const handleModalSuccess = () => {
     fetchProducts();
   };
@@ -802,11 +847,24 @@ export default function AdminPage() {
                     <div className="pt-4 border-t border-gray-200">
                       <button
                         className="w-full btn-jungle flex items-center justify-center gap-2"
-                        onClick={() => alert('Shipping label generation will be added next!')}
+                        onClick={() => handleGenerateShippingLabel(selectedOrder)}
+                        disabled={ordersLoading}
                       >
-                        <Package className="h-5 w-5" />
-                        Generate Shipping Label
+                        {ordersLoading ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Generating Label...
+                          </>
+                        ) : (
+                          <>
+                            <Package className="h-5 w-5" />
+                            Generate Shipping Label
+                          </>
+                        )}
                       </button>
+                      <p className="text-xs text-gray-500 text-center mt-2">
+                        This will purchase a shipping label via Shippo and earn you revenue from shipping
+                      </p>
                     </div>
                   </div>
                 </div>

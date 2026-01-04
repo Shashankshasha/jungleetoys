@@ -47,7 +47,7 @@ export default function CheckoutPage() {
   });
 
   const cartSubtotal = subtotal();
-  const shippingCost = cartSubtotal >= 30 ? 0 : cartSubtotal < 20 ? 4.99 : 2.99;
+  const shippingCost = cartSubtotal >= 30 ? 0 : 3.99; // Flat £3.99 shipping
   const giftWrapCost = giftWrap ? 3.99 : 0;
   const total = cartSubtotal + shippingCost + giftWrapCost;
 

@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       0
     );
 
-    const shippingCost = subtotal >= 30 ? 0 : subtotal < 20 ? 4.99 : 2.99;
+    const shippingCost = subtotal >= 30 ? 0 : 3.99; // Flat £3.99 shipping
     const giftWrapCost = giftWrap ? 3.99 : 0;
 
     // Create line items for Stripe

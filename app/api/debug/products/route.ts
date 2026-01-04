@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+// Force dynamic rendering - don't pre-render this route during build
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     // Fetch all products from Supabase

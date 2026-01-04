@@ -57,8 +57,11 @@ export default function CheckoutPage() {
   const handleShippingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('🚀 handleShippingSubmit called, cartSubtotal:', cartSubtotal);
+
     // If free shipping (over £30), skip to payment
     if (cartSubtotal >= 30) {
+      console.log('✅ Free shipping (>= £30), skipping to payment');
       setStep('payment');
       return;
     }
@@ -66,6 +69,12 @@ export default function CheckoutPage() {
     // Fetch shipping rates
     setLoadingRates(true);
     setError('');
+
+    console.log('📦 Fetching shipping rates for address:', {
+      city: shipping.city,
+      postcode: shipping.postcode,
+      country: shipping.country,
+    });
 
     try {
       const response = await fetch('/api/shipping/rates', {
@@ -87,16 +96,25 @@ export default function CheckoutPage() {
         }),
       });
 
+      console.log('📬 Shipping rates response status:', response.status);
+
       const data = await response.json();
+      console.log('📊 Shipping rates data:', data);
+
       setShippingRates(data.rates || []);
 
       // Auto-select cheapest option
       if (data.rates && data.rates.length > 0) {
+        console.log('✅ Auto-selecting cheapest rate:', data.rates[0]);
         setSelectedRate(data.rates[0]);
+      } else {
+        console.log('⚠️ No rates available in response');
       }
 
+      console.log('➡️ Moving to shipping-options step');
       setStep('shipping-options');
     } catch (err) {
+      console.error('❌ Error fetching shipping rates:', err);
       setError('Failed to load shipping options. Please try again.');
     } finally {
       setLoadingRates(false);

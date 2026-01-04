@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/auth';
 
+// Force dynamic rendering - don't pre-render this route during build
+export const dynamic = 'force-dynamic';
+
 // GET /api/products - Fetch all products with optional filters
 export async function GET(req: NextRequest) {
   try {

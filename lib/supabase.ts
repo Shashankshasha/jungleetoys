@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -11,38 +12,69 @@ if (typeof window !== 'undefined') {
   console.log('URL value:', supabaseUrl?.substring(0, 30) + '...');
 }
 
-// Only check credentials at runtime in browser, not during build
-// Allow build to proceed without credentials on server side
-if (!supabaseUrl || !supabaseAnonKey) {
-  // Only throw error in browser (client-side)
-  if (typeof window !== 'undefined') {
-    throw new Error(`Missing Supabase credentials. URL: ${!!supabaseUrl}, Key: ${!!supabaseAnonKey}`);
+// Lazy initialization - only create client when first used, not at import time
+let _supabase: SupabaseClient | null = null;
+
+function getSupabaseClient(): SupabaseClient {
+  if (_supabase) return _supabase;
+
+  // Only check credentials at runtime, not during build
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // Only throw error in browser (client-side)
+    if (typeof window !== 'undefined') {
+      throw new Error(`Missing Supabase credentials. URL: ${!!supabaseUrl}, Key: ${!!supabaseAnonKey}`);
+    }
+    // During server build or when credentials missing, return placeholder client
+    console.warn('⚠️ Supabase credentials not available - using placeholder client');
   }
-  // During server build or when credentials missing, just warn
-  console.warn('⚠️ Supabase credentials not available - using placeholders');
+
+  _supabase = createClient(
+    supabaseUrl || 'https://placeholder.supabase.co',
+    supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTI4MDAsImV4cCI6MTk2MDc2ODgwMH0.placeholder'
+  );
+
+  return _supabase;
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
-);
+// Export a proxy that lazily initializes the client
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    const client = getSupabaseClient();
+    return (client as any)[prop];
+  }
+});
 
 // Server-side client with service role (only available on server)
-// This should NEVER be imported in client components
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+let _supabaseAdmin: SupabaseClient | null = null;
 
-const _supabaseAdmin = serviceRoleKey && supabaseUrl
-  ? createClient(supabaseUrl, serviceRoleKey, {
+function getSupabaseAdmin(): SupabaseClient | null {
+  if (_supabaseAdmin) return _supabaseAdmin;
+
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (serviceRoleKey && supabaseUrl) {
+    _supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
       },
-    })
-  : null;
+    });
+  }
 
-// Export with non-null assertion for API routes (they run on server)
-// In browser, this will be null which is fine since it's never used there
-export const supabaseAdmin = _supabaseAdmin as ReturnType<typeof createClient>;
+  return _supabaseAdmin;
+}
+
+// Export a proxy that lazily initializes the admin client
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    const client = getSupabaseAdmin();
+    if (!client) {
+      console.warn('⚠️ Supabase admin client not available');
+      return undefined;
+    }
+    return (client as any)[prop];
+  }
+});
 
 // Database types
 export interface Product {

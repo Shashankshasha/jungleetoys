@@ -16,9 +16,7 @@ const nextConfig = {
       },
     ],
   },
-  env: {
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-  },
+  // Removed env config - Next.js 14 handles environment variables automatically
 };
 
 module.exports = nextConfig;

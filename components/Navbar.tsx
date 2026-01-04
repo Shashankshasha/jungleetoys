@@ -53,7 +53,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm">
       {/* Top banner */}
       <div className="bg-gradient-to-r from-jungle-600 to-jungle-500 text-white text-center py-2 text-sm font-medium">
-        🎉 Free UK Delivery on orders over £50! 🚚
+        🎉 Free UK Delivery on orders over £30! 🚚
       </div>
 
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

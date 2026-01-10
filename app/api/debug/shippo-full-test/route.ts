@@ -200,7 +200,7 @@ export async function GET() {
           message: `No rates matched filter. Looking for: ${targetCarriers.join(', ')}`,
           data: {
             targetCarriers,
-            availableProviders: [...new Set(rates.map((r: any) => r.provider))],
+            availableProviders: Array.from(new Set(rates.map((r: any) => r.provider))),
             filteredCount: 0,
           },
         };

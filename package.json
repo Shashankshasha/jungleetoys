@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@easypost/api": "^8.4.0",
     "@stripe/stripe-js": "^4.1.0",
     "@supabase/supabase-js": "^2.45.0",
     "clsx": "^2.1.1",

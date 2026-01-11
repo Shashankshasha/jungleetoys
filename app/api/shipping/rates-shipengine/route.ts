@@ -109,28 +109,69 @@ export async function POST(req: NextRequest) {
         })
         .map((rate: any) => {
           const originalAmount = parseFloat(rate.shippingAmount.amount);
-          const markedUpAmount = (originalAmount * 1.5).toFixed(2); // 50% markup
+          const markedUpAmount = (originalAmount * 1.5).toFixed(2); // 50% markup (includes handling)
 
-          const carrierName = rate.carrierFriendlyName || rate.carrierCode;
+          let carrierName = rate.carrierFriendlyName || rate.carrierCode;
+
+          // Clean up carrier name - remove "ShipStation Carrier Services"
+          carrierName = carrierName.replace(' - ShipStation Carrier Services', '');
+
+          // Simplify service names - remove detailed descriptions
+          let simplifiedService = 'Standard Delivery';
+
+          // Determine service type based on carrier
+          if (carrierName.includes('EVRi')) {
+            if (rate.serviceType.toLowerCase().includes('next day')) {
+              simplifiedService = 'Next Day Delivery';
+            } else {
+              simplifiedService = 'Standard Delivery';
+            }
+          } else if (carrierName.includes('Royal Mail')) {
+            if (rate.serviceType.includes('24')) {
+              simplifiedService = 'Next Day';
+            } else {
+              simplifiedService = '2-3 Day Delivery';
+            }
+          } else if (carrierName.includes('DPD')) {
+            if (rate.serviceType.toLowerCase().includes('next day')) {
+              simplifiedService = 'Next Day';
+            } else {
+              simplifiedService = 'Standard Delivery';
+            }
+          }
+
           console.log(`💰 ${carrierName} ${rate.serviceType}: £${rate.shippingAmount.amount} → £${markedUpAmount}`);
 
           return {
             id: rate.rateId,
             provider: carrierName,
-            serviceName: rate.serviceType,
+            serviceName: simplifiedService,
             amount: markedUpAmount,
             originalAmount: rate.shippingAmount.amount,
             currency: rate.shippingAmount.currency,
             estimatedDays: rate.deliveryDays || '3-5',
-            shipengineRateId: rate.rateId, // Store for label purchase
+            shipengineRateId: rate.rateId,
           };
         })
         .sort((a: any, b: any) => parseFloat(a.amount) - parseFloat(b.amount));
 
-      console.log(`✅ Returning ${markedUpRates.length} marked up rates`);
+      // Group by carrier and only show cheapest option per carrier
+      const cheapestPerCarrier = new Map();
+      markedUpRates.forEach((rate: any) => {
+        const existing = cheapestPerCarrier.get(rate.provider);
+        if (!existing || parseFloat(rate.amount) < parseFloat(existing.amount)) {
+          cheapestPerCarrier.set(rate.provider, rate);
+        }
+      });
+
+      // Get final simplified rates (one per carrier)
+      const finalRates = Array.from(cheapestPerCarrier.values())
+        .sort((a: any, b: any) => parseFloat(a.amount) - parseFloat(b.amount));
+
+      console.log(`✅ Returning ${finalRates.length} simplified rates (cheapest per carrier)`);
 
       // If no enabled carriers found, return fallback
-      if (markedUpRates.length === 0) {
+      if (finalRates.length === 0) {
         console.log('⚠️ No enabled carrier rates available, using fallback');
         return NextResponse.json({
           rates: [
@@ -143,24 +184,12 @@ export async function POST(req: NextRequest) {
               estimatedDays: '3-5',
             },
           ],
-          debug: {
-            message: 'No enabled carriers available',
-            totalRatesReceived: rates.length,
-            availableCarriers: allCarriersFromShipEngine,
-            allRates: allRatesDetails,
-          },
         });
       }
 
-      // TEMPORARY: Include debug info to see what carriers ShipEngine is returning
+      // Return simplified rates (cheapest option per carrier, 50% markup included)
       return NextResponse.json({
-        rates: markedUpRates,
-        debug: {
-          totalRatesReceived: rates.length,
-          totalRatesReturned: markedUpRates.length,
-          allCarriersFromShipEngine: allCarriersFromShipEngine,
-          allRates: allRatesDetails,
-        },
+        rates: finalRates,
       });
 
     } catch (shipengineError: any) {

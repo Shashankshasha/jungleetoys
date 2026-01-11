@@ -24,12 +24,14 @@ import {
   X,
   Mail,
   Phone,
+  Star,
+  MessageSquare,
 } from 'lucide-react';
 import { formatPrice } from '@/lib/cart';
 import { Product } from '@/lib/supabase';
 import ProductFormModal from '@/components/ProductFormModal';
 
-type Tab = 'dashboard' | 'products' | 'orders' | 'offers' | 'settings';
+type Tab = 'dashboard' | 'products' | 'orders' | 'offers' | 'reviews' | 'settings';
 
 interface Category {
   id: string;
@@ -62,6 +64,22 @@ interface Offer {
   };
 }
 
+interface Review {
+  id: string;
+  product_id: string;
+  customer_name: string;
+  customer_email: string;
+  rating: number;
+  comment: string;
+  approved: boolean;
+  created_at: string;
+  products?: {
+    id: string;
+    name: string;
+    images: string[];
+  };
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -83,6 +101,9 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsFilter, setReviewsFilter] = useState<string>('all');
 
   // Fetch products
   const fetchProducts = async () => {
@@ -203,6 +224,79 @@ export default function AdminPage() {
     }
   };
 
+  // Fetch reviews
+  const fetchReviews = async () => {
+    try {
+      setReviewsLoading(true);
+      const response = await fetch(`/api/admin/reviews?filter=${reviewsFilter}`);
+      if (response.ok) {
+        const data = await response.json();
+        setReviews(data.reviews || []);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  // Approve review
+  const approveReview = async (reviewId: string) => {
+    try {
+      const response = await fetch('/api/admin/reviews', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: reviewId, approved: true }),
+      });
+
+      if (response.ok) {
+        fetchReviews();
+        alert('Review approved!');
+      }
+    } catch (error) {
+      console.error('Error approving review:', error);
+      alert('Failed to approve review');
+    }
+  };
+
+  // Reject review
+  const rejectReview = async (reviewId: string) => {
+    try {
+      const response = await fetch('/api/admin/reviews', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: reviewId, approved: false }),
+      });
+
+      if (response.ok) {
+        fetchReviews();
+        alert('Review rejected!');
+      }
+    } catch (error) {
+      console.error('Error rejecting review:', error);
+      alert('Failed to reject review');
+    }
+  };
+
+  // Delete review
+  const deleteReview = async (reviewId: string) => {
+    if (!confirm('Are you sure you want to delete this review permanently?')) return;
+
+    try {
+      const response = await fetch(`/api/admin/reviews?id=${reviewId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        fetchReviews();
+        alert('Review deleted!');
+      }
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      alert('Failed to delete review');
+    }
+  };
+
   // Check authentication
   const checkAuth = async () => {
     try {
@@ -262,6 +356,13 @@ export default function AdminPage() {
       fetchOrders();
     }
   }, [activeTab]);
+
+  // Fetch reviews when tab becomes active or filter changes
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'reviews') {
+      fetchReviews();
+    }
+  }, [activeTab, reviewsFilter]);
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -419,6 +520,7 @@ export default function AdminPage() {
             { id: 'products', label: 'Products', icon: Package },
             { id: 'orders', label: 'Orders', icon: ShoppingCart },
             { id: 'offers', label: 'Offers', icon: Tag },
+            { id: 'reviews', label: 'Reviews', icon: MessageSquare },
             { id: 'settings', label: 'Settings', icon: Settings },
           ].map((tab) => (
             <button
@@ -996,6 +1098,138 @@ export default function AdminPage() {
                           >
                             <X className="h-4 w-4" />
                             Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Reviews Tab */}
+        {activeTab === 'reviews' && (
+          <div className="space-y-6">
+            {/* Filter Buttons */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+              <div className="flex gap-2 overflow-x-auto">
+                {['all', 'pending', 'approved'].map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setReviewsFilter(filter)}
+                    className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                      reviewsFilter === filter
+                        ? 'bg-jungle-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Reviews List */}
+            {reviewsLoading ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <Loader2 className="h-12 w-12 text-jungle-600 animate-spin mx-auto mb-4" />
+                <p className="text-gray-600">Loading reviews...</p>
+              </div>
+            ) : reviews.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No {reviewsFilter !== 'all' ? reviewsFilter : ''} reviews yet
+                </h3>
+                <p className="text-gray-500">Customer reviews will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Product Info */}
+                      <div className="flex gap-4">
+                        {review.products?.images && review.products.images[0] && (
+                          <img
+                            src={review.products.images[0]}
+                            alt={review.products.name}
+                            className="w-20 h-20 object-cover rounded-lg"
+                          />
+                        )}
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{review.products?.name || 'Product'}</h3>
+                          <div className="flex items-center gap-1 mt-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < review.rating
+                                    ? 'text-banana-400 fill-banana-400'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                            <span className="text-sm text-gray-600 ml-1">({review.rating}/5)</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Review Content */}
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-2">Review</h4>
+                        <p className="text-sm text-gray-700 mb-3 italic">"{review.comment}"</p>
+                        <div className="text-sm text-gray-600">
+                          <p className="font-medium">{review.customer_name}</p>
+                          <p className="text-xs">{review.customer_email}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(review.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-col gap-2">
+                        <div
+                          className={`px-3 py-1 rounded-full text-xs font-semibold w-fit ${
+                            review.approved
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          }`}
+                        >
+                          {review.approved ? 'APPROVED' : 'PENDING'}
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {!review.approved && (
+                            <button
+                              onClick={() => approveReview(review.id)}
+                              className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
+                            >
+                              <Check className="h-4 w-4" />
+                              Approve
+                            </button>
+                          )}
+                          {review.approved && (
+                            <button
+                              onClick={() => rejectReview(review.id)}
+                              className="flex items-center gap-1 px-3 py-2 bg-yellow-600 text-white rounded-lg text-sm hover:bg-yellow-700"
+                            >
+                              <X className="h-4 w-4" />
+                              Unapprove
+                            </button>
+                          )}
+                          <button
+                            onClick={() => deleteReview(review.id)}
+                            className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
                           </button>
                         </div>
                       </div>

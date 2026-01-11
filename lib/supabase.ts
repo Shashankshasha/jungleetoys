@@ -148,3 +148,15 @@ export interface Order {
   created_at: string;
   updated_at: string;
 }
+
+export interface Review {
+  id: string;
+  product_id: string;
+  customer_name: string;
+  customer_email: string;
+  rating: number; // 1-5 stars
+  comment: string;
+  approved: boolean;
+  created_at: string;
+  product?: Product;
+}

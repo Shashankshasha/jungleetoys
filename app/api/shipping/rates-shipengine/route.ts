@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
         postalCode: 'N13 4BS',
         countryCode: 'GB',
         phone: '+44 7342224136',
+        addressResidentialIndicator: 'no' as const,
       };
 
       // Customer address (to)
@@ -37,6 +38,7 @@ export async function POST(req: NextRequest) {
         postalCode: toAddress.zip,
         countryCode: toAddress.country,
         phone: toAddress.phone || '',
+        addressResidentialIndicator: 'yes' as const,
       };
 
       // Package details

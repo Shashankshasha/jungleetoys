@@ -3,22 +3,67 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
-import { Product } from '@/lib/supabase';
+import { Product, supabase } from '@/lib/supabase';
 
-const categories = [
-  { name: 'Action Figures', slug: 'action-figures', emoji: '🦸', color: 'from-red-400 to-orange-500' },
-  { name: 'Educational', slug: 'educational', emoji: '📚', color: 'from-blue-400 to-purple-500' },
-  { name: 'Outdoor Play', slug: 'outdoor', emoji: '⚽', color: 'from-green-400 to-emerald-500' },
-  { name: 'Board Games', slug: 'board-games', emoji: '🎲', color: 'from-yellow-400 to-orange-500' },
-  { name: 'Building Blocks', slug: 'building-blocks', emoji: '🧱', color: 'from-pink-400 to-rose-500' },
-  { name: 'Dolls & Plush', slug: 'dolls-plush', emoji: '🧸', color: 'from-purple-400 to-pink-500' },
-  { name: 'Vehicles', slug: 'vehicles', emoji: '🚗', color: 'from-cyan-400 to-blue-500' },
-  { name: 'Arts & Crafts', slug: 'arts-crafts', emoji: '🎨', color: 'from-teal-400 to-green-500' },
-];
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  image?: string;
+}
+
+// Category colors for UI (mapped by slug for fallback)
+const categoryColors: Record<string, string> = {
+  'action-figures': 'from-red-400 to-orange-500',
+  'educational': 'from-blue-400 to-purple-500',
+  'outdoor': 'from-green-400 to-emerald-500',
+  'board-games': 'from-yellow-400 to-orange-500',
+  'building-blocks': 'from-pink-400 to-rose-500',
+  'dolls-plush': 'from-purple-400 to-pink-500',
+  'vehicles': 'from-cyan-400 to-blue-500',
+  'arts-crafts': 'from-teal-400 to-green-500',
+};
+
+const categoryEmojis: Record<string, string> = {
+  'action-figures': '🦸',
+  'educational': '📚',
+  'outdoor': '⚽',
+  'board-games': '🎲',
+  'building-blocks': '🧱',
+  'dolls-plush': '🧸',
+  'vehicles': '🚗',
+  'arts-crafts': '🎨',
+};
 
 export default function HomePage() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Fetch categories from Supabase
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('id, name, slug, description, image')
+          .order('name');
+
+        if (error) {
+          console.error('Error fetching categories:', error);
+          return;
+        }
+
+        console.log('✅ Categories fetched:', data?.length || 0);
+        setCategories(data || []);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Fetch products from API (includes review statistics)
   useEffect(() => {
@@ -164,8 +209,8 @@ export default function HomePage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
             {categories.map((category) => (
               <Link
-                key={category.slug}
-                href={`/products?category=${category.slug}`}
+                key={category.id}
+                href={`/products?category=${category.id}`}
                 className="group relative bg-gradient-to-br rounded-2xl p-6 text-center
                          hover:shadow-xl hover:-translate-y-1 transition-all duration-300
                          overflow-hidden"
@@ -173,11 +218,11 @@ export default function HomePage() {
                   background: `linear-gradient(135deg, var(--tw-gradient-stops))`,
                 }}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-10
+                <div className={`absolute inset-0 bg-gradient-to-br ${categoryColors[category.slug] || 'from-gray-400 to-gray-500'} opacity-10
                               group-hover:opacity-20 transition-opacity`} />
                 <span className="relative text-5xl lg:text-6xl block mb-3
                                group-hover:scale-110 transition-transform duration-300">
-                  {category.emoji}
+                  {categoryEmojis[category.slug] || '🎁'}
                 </span>
                 <h3 className="relative font-semibold text-gray-900 group-hover:text-jungle-700">
                   {category.name}

@@ -1,9 +1,9 @@
 import EasyPostClient from '@easypost/api';
 
 // Lazy initialization - only create client when first used
-let easyPostInstance: EasyPostClient | null = null;
+let easyPostInstance: any = null;
 
-export const getEasyPostClient = (): EasyPostClient => {
+export const getEasyPostClient = () => {
   if (!easyPostInstance) {
     const apiKey = process.env.EASYPOST_API_KEY;
 

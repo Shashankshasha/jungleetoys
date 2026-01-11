@@ -102,6 +102,10 @@ export async function POST(req: NextRequest) {
         enabled: isCarrierEnabled(r.carrier),
       }));
 
+      console.log('🔍 DEBUG: All carriers from EasyPost:', allCarriersFromEasyPost);
+      console.log('🔍 DEBUG: Total rates received:', rates.length);
+      console.log('🔍 DEBUG: All rates details:', JSON.stringify(allRatesDetails, null, 2));
+
       // If no enabled carriers found, return fallback
       if (markedUpRates.length === 0) {
         console.log('⚠️ No enabled carrier rates available, using fallback');

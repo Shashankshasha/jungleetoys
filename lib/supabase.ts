@@ -93,6 +93,9 @@ export interface Product {
   brand?: string;
   created_at: string;
   updated_at: string;
+  // Review statistics (added dynamically by API)
+  review_count?: number;
+  average_rating?: number;
 }
 
 // Helper to normalize product data from database

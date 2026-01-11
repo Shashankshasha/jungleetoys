@@ -52,8 +52,41 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
     }
 
+    // Fetch review statistics for all products
+    const productIds = data?.map((p: any) => p.id) || [];
+    let productsWithReviews = data || [];
+
+    if (productIds.length > 0) {
+      // Get approved reviews grouped by product
+      const { data: reviews } = await supabase
+        .from('reviews')
+        .select('product_id, rating')
+        .eq('approved', true)
+        .in('product_id', productIds);
+
+      // Calculate review stats for each product
+      const reviewStats = (reviews || []).reduce((acc: any, review: any) => {
+        if (!acc[review.product_id]) {
+          acc[review.product_id] = { total: 0, sum: 0 };
+        }
+        acc[review.product_id].total += 1;
+        acc[review.product_id].sum += review.rating;
+        return acc;
+      }, {});
+
+      // Add review data to products
+      productsWithReviews = data.map((product: any) => {
+        const stats = reviewStats[product.id] || { total: 0, sum: 0 };
+        return {
+          ...product,
+          review_count: stats.total,
+          average_rating: stats.total > 0 ? Math.round((stats.sum / stats.total) * 10) / 10 : 0,
+        };
+      });
+    }
+
     return NextResponse.json({
-      products: data,
+      products: productsWithReviews,
       total: count,
       limit,
       offset,

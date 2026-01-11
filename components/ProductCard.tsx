@@ -97,15 +97,23 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           </h3>
         </Link>
 
-        {/* Rating (placeholder) */}
+        {/* Rating (dynamic from reviews) */}
         <div className="flex items-center gap-1">
-          {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
-              className={`h-4 w-4 ${i < 4 ? 'text-banana-400 fill-banana-400' : 'text-gray-300'}`}
-            />
-          ))}
-          <span className="text-xs text-gray-500 ml-1">(24)</span>
+          {[...Array(5)].map((_, i) => {
+            const rating = product.average_rating || 0;
+            const isFilled = i < Math.round(rating);
+            return (
+              <Star
+                key={i}
+                className={`h-4 w-4 ${
+                  isFilled ? 'text-banana-400 fill-banana-400' : 'text-gray-300'
+                }`}
+              />
+            );
+          })}
+          <span className="text-xs text-gray-500 ml-1">
+            ({product.review_count || 0})
+          </span>
         </div>
 
         {/* Price */}

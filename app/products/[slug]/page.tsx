@@ -22,6 +22,15 @@ import { Product, supabase, normalizeProduct } from '@/lib/supabase';
 import ProductCard from '@/components/ProductCard';
 import MakeOfferModal from '@/components/MakeOfferModal';
 
+interface ReviewData {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
 export default function ProductPage({ params }: { params: { slug: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -29,6 +38,17 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+  const [reviews, setReviews] = useState<ReviewData[]>([]);
+  const [reviewsCount, setReviewsCount] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewForm, setReviewForm] = useState({
+    name: '',
+    email: '',
+    rating: 5,
+    comment: '',
+  });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const { addItem } = useCart();
 
   // Fetch product and related products from Supabase
@@ -74,6 +94,65 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
 
     fetchProduct();
   }, [params.slug]);
+
+  // Fetch reviews for this product
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!product) return;
+
+      try {
+        const response = await fetch(`/api/reviews?productId=${product.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setReviews(data.reviews || []);
+          setReviewsCount(data.count || 0);
+          setAverageRating(data.averageRating || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      }
+    };
+
+    fetchReviews();
+  }, [product]);
+
+  // Submit review
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!product) return;
+
+    setReviewSubmitting(true);
+
+    try {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          customerName: reviewForm.name,
+          customerEmail: reviewForm.email,
+          rating: reviewForm.rating,
+          comment: reviewForm.comment,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message || 'Thank you for your review!');
+        setReviewForm({ name: '', email: '', rating: 5, comment: '' });
+        setShowReviewForm(false);
+      } else {
+        alert(data.error || 'Failed to submit review');
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      alert('Failed to submit review. Please try again.');
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -211,11 +290,13 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`h-5 w-5 ${i < 4 ? 'text-banana-400 fill-banana-400' : 'text-gray-300'}`}
+                    className={`h-5 w-5 ${i < Math.round(averageRating) ? 'text-banana-400 fill-banana-400' : 'text-gray-300'}`}
                   />
                 ))}
               </div>
-              <span className="text-sm text-gray-600">(24 reviews)</span>
+              <span className="text-sm text-gray-600">
+                {reviewsCount > 0 ? `${averageRating.toFixed(1)} (${reviewsCount} reviews)` : 'No reviews yet'}
+              </span>
               <span className="text-sm text-jungle-600">|</span>
               <span className="text-sm text-jungle-600">{product.stock} in stock</span>
             </div>
@@ -346,6 +427,161 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             </div>
           </div>
         </div>
+
+        {/* Customer Reviews Section */}
+        <section className="mt-12 pt-12 border-t border-jungle-100">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="font-display text-2xl lg:text-3xl font-bold text-gray-900">
+              Customer Reviews
+            </h2>
+            <button
+              onClick={() => setShowReviewForm(!showReviewForm)}
+              className="btn-jungle flex items-center gap-2"
+            >
+              <Star className="h-4 w-4" />
+              {showReviewForm ? 'Cancel' : 'Write a Review'}
+            </button>
+          </div>
+
+          {/* Review Form */}
+          {showReviewForm && (
+            <div className="bg-white rounded-2xl border-2 border-jungle-200 p-6 mb-8">
+              <h3 className="font-display text-xl font-bold mb-4">Write Your Review</h3>
+              <form onSubmit={handleSubmitReview} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Your Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={reviewForm.name}
+                      onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Your Email *
+                    </label>
+                    <input
+                      type="email"
+                      value={reviewForm.email}
+                      onChange={(e) => setReviewForm({ ...reviewForm, email: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Your Rating *
+                  </label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => setReviewForm({ ...reviewForm, rating })}
+                        className="p-2 hover:bg-jungle-50 rounded-lg transition-colors"
+                      >
+                        <Star
+                          className={`h-8 w-8 ${
+                            rating <= reviewForm.rating
+                              ? 'text-banana-400 fill-banana-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    <span className="ml-2 text-gray-600 self-center">
+                      {reviewForm.rating} star{reviewForm.rating !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Your Review *
+                  </label>
+                  <textarea
+                    value={reviewForm.comment}
+                    onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                    required
+                    rows={4}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:border-jungle-500 outline-none"
+                    placeholder="Share your thoughts about this product..."
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    type="submit"
+                    disabled={reviewSubmitting}
+                    className="btn-jungle flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowReviewForm(false)}
+                    className="btn-outline-jungle"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  * Your review will be published after admin approval
+                </p>
+              </form>
+            </div>
+          )}
+
+          {/* Reviews List */}
+          {reviews.length === 0 ? (
+            <div className="text-center py-12 bg-jungle-50 rounded-2xl">
+              <Star className="h-12 w-12 text-jungle-300 mx-auto mb-4" />
+              <p className="text-gray-600">No reviews yet. Be the first to review this product!</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {reviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="bg-white rounded-2xl border border-jungle-100 p-6"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{review.customer_name}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-4 w-4 ${
+                                i < review.rating
+                                  ? 'text-banana-400 fill-banana-400'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-gray-700">{review.comment}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* Related Products */}
         <section className="mt-16 pt-12 border-t border-jungle-100">

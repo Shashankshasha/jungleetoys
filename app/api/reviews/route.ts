@@ -72,6 +72,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check if supabaseAdmin is available
+    if (!supabaseAdmin || typeof supabaseAdmin.from !== 'function') {
+      console.error('❌ SUPABASE_SERVICE_ROLE_KEY environment variable is not set!');
+      return NextResponse.json(
+        { error: 'Review system is not configured. Please contact the administrator.' },
+        { status: 500 }
+      );
+    }
+
     // Insert review (will be unapproved by default)
     // Use supabaseAdmin to bypass RLS for server-side insert
     const { data: review, error } = await supabaseAdmin

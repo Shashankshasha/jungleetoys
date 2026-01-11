@@ -58,11 +58,19 @@ export async function POST(req: NextRequest) {
       console.log('📦 Requesting rates from ShipEngine...');
 
       // Get rates from ShipEngine
+      // Use your connected carrier IDs: Royal Mail, EVRi, DPD
       const ratesResponse = await shipengine.getRatesWithShipmentDetails({
         shipment: {
           shipFrom: shipFrom,
           shipTo: shipTo,
           packages: [packageDetails],
+        },
+        rateOptions: {
+          carrierIds: [
+            'se-359318', // Royal Mail
+            'se-359314', // EVRi
+            'se-359315', // DPD
+          ],
         },
       });
 

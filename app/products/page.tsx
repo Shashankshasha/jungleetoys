@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, SlidersHorizontal, X, ChevronDown, Search, Grid3X3, LayoutList } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
-import { Product, supabase, normalizeProduct } from '@/lib/supabase';
+import { Product } from '@/lib/supabase';
 
 const categories = [
   { id: 'action-figures', name: 'Action Figures', emoji: '🦸' },
@@ -51,29 +51,26 @@ function ProductsContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Fetch products from Supabase
+  // Fetch products from API (includes review statistics)
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        console.log('🔍 Fetching products from Supabase...');
+        console.log('🔍 Fetching products from API...');
 
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .order('created_at', { ascending: false });
+        const response = await fetch('/api/products');
+        const data = await response.json();
 
-        if (error) {
-          console.error('❌ Supabase error:', error);
-          throw error;
+        if (!response.ok) {
+          console.error('❌ API error:', data);
+          throw new Error('Failed to fetch products');
         }
 
-        console.log('✅ Products fetched successfully:', data?.length || 0, 'products');
-        console.log('📦 Product data:', data);
+        console.log('✅ Products fetched successfully:', data.products?.length || 0, 'products');
+        console.log('📦 Product data with reviews:', data.products);
 
-        // Normalize products to ensure consistent data structure
-        const normalizedProducts = (data || []).map(normalizeProduct);
-        setAllProducts(normalizedProducts);
+        // Products already include review_count and average_rating from API
+        setAllProducts(data.products || []);
       } catch (error) {
         console.error('❌ Error fetching products:', error);
       } finally {

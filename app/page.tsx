@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
-import { Product, supabase, normalizeProduct } from '@/lib/supabase';
+import { Product } from '@/lib/supabase';
 
 const categories = [
   { name: 'Action Figures', slug: 'action-figures', emoji: '🦸', color: 'from-red-400 to-orange-500' },
@@ -20,28 +20,26 @@ export default function HomePage() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch products from Supabase
+  // Fetch products from API (includes review statistics)
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        console.log('🏠 Home page: Fetching products from Supabase...');
+        console.log('🏠 Home page: Fetching products from API...');
 
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .order('created_at', { ascending: false });
+        const response = await fetch('/api/products');
+        const data = await response.json();
 
-        if (error) {
-          console.error('❌ Home page: Supabase error:', error);
-          throw error;
+        if (!response.ok) {
+          console.error('❌ Home page: API error:', data);
+          throw new Error('Failed to fetch products');
         }
 
-        console.log('✅ Home page: Products fetched:', data?.length || 0);
+        console.log('✅ Home page: Products fetched:', data.products?.length || 0);
+        console.log('📦 Home page: Products with reviews:', data.products);
 
-        // Normalize products to ensure consistent data structure
-        const normalizedProducts = (data || []).map(normalizeProduct);
-        setAllProducts(normalizedProducts);
+        // Products already include review_count and average_rating from API
+        setAllProducts(data.products || []);
       } catch (error) {
         console.error('❌ Home page: Error fetching products:', error);
       } finally {

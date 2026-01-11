@@ -155,20 +155,21 @@ export async function POST(req: NextRequest) {
         })
         .sort((a: any, b: any) => parseFloat(a.amount) - parseFloat(b.amount));
 
-      // Group by carrier and only show cheapest option per carrier
-      const cheapestPerCarrier = new Map();
+      // Group by carrier and service type - show both standard and next day
+      const serviceMap = new Map();
       markedUpRates.forEach((rate: any) => {
-        const existing = cheapestPerCarrier.get(rate.provider);
+        const key = `${rate.provider}_${rate.serviceName}`;
+        const existing = serviceMap.get(key);
         if (!existing || parseFloat(rate.amount) < parseFloat(existing.amount)) {
-          cheapestPerCarrier.set(rate.provider, rate);
+          serviceMap.set(key, rate);
         }
       });
 
-      // Get final simplified rates (one per carrier)
-      const finalRates = Array.from(cheapestPerCarrier.values())
+      // Get final rates - includes both standard and next day options
+      const finalRates = Array.from(serviceMap.values())
         .sort((a: any, b: any) => parseFloat(a.amount) - parseFloat(b.amount));
 
-      console.log(`✅ Returning ${finalRates.length} simplified rates (cheapest per carrier)`);
+      console.log(`✅ Returning ${finalRates.length} simplified rates (standard + next day options)`);
 
       // If no enabled carriers found, return fallback
       if (finalRates.length === 0) {

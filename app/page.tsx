@@ -115,15 +115,14 @@ export default function HomePage() {
                 🎉 New Collection Just Arrived!
               </span>
               <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-                Where{' '}
-                <span className="text-gradient-jungle">Imagination</span>
+                Bring Joy to Your{' '}
+                <span className="text-gradient-jungle">Little Ones</span>
                 <br />
-                Comes to{' '}
-                <span className="text-gradient-tiger">Play!</span>
+                Every Day! 🎁
               </h1>
               <p className="text-lg text-gray-600 mb-8 max-w-lg mx-auto lg:mx-0">
-                Discover our amazing collection of toys for children of all ages.
-                Quality toys that spark creativity and bring endless joy! 🌟
+                Trusted by parents across the UK. Premium quality toys that inspire learning,
+                creativity, and endless hours of fun. Safe, educational, and absolutely delightful! ⭐
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link href="/products" className="btn-jungle text-center">
@@ -137,39 +136,78 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {/* Trust Badges */}
+              {/* Trust Badges - Parent Focused */}
               <div className="flex flex-wrap justify-center lg:justify-start gap-6 mt-10">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span className="text-2xl">✅</span>
+                  <span className="font-medium">Safety Tested<br />& Certified</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span className="text-2xl">🎓</span>
+                  <span className="font-medium">Educational<br />& Engaging</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span className="text-2xl">⭐</span>
+                  <span className="font-medium">Premium<br />Quality</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                   <span className="text-2xl">🚚</span>
-                  <span>Free UK Delivery<br />over £50</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="text-2xl">↩️</span>
-                  <span>30-Day<br />Returns</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="text-2xl">🛡️</span>
-                  <span>Safe & Secure<br />Checkout</span>
+                  <span className="font-medium">Free Delivery<br />over £50</span>
                 </div>
               </div>
             </div>
 
-            {/* Hero Image Area */}
+            {/* Hero Image Area - Quick Category Links */}
             <div className="relative">
               <div className="relative z-10 bg-white/30 backdrop-blur-sm rounded-3xl p-8 border border-white/50 shadow-2xl">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gradient-to-br from-jungle-200 to-jungle-300 rounded-2xl p-6 aspect-square flex items-center justify-center text-6xl transform hover:scale-105 transition-transform">
-                    🦖
-                  </div>
-                  <div className="bg-gradient-to-br from-tiger-200 to-tiger-300 rounded-2xl p-6 aspect-square flex items-center justify-center text-6xl transform hover:scale-105 transition-transform">
-                    🚀
-                  </div>
-                  <div className="bg-gradient-to-br from-parrot-200 to-parrot-300 rounded-2xl p-6 aspect-square flex items-center justify-center text-6xl transform hover:scale-105 transition-transform">
-                    🎨
-                  </div>
-                  <div className="bg-gradient-to-br from-banana-200 to-banana-300 rounded-2xl p-6 aspect-square flex items-center justify-center text-6xl transform hover:scale-105 transition-transform">
-                    🧸
-                  </div>
+                  {/* Action Figures / Educational */}
+                  <Link
+                    href="/products?filter=featured"
+                    className="bg-gradient-to-br from-jungle-200 to-jungle-300 rounded-2xl p-6 aspect-square flex flex-col items-center justify-center text-6xl transform hover:scale-105 transition-all cursor-pointer group"
+                  >
+                    <span className="group-hover:scale-110 transition-transform">🦖</span>
+                    <span className="text-xs font-semibold text-jungle-800 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Featured
+                    </span>
+                  </Link>
+
+                  {/* Vehicles / Outdoor */}
+                  <Link
+                    href="/products?filter=new"
+                    className="bg-gradient-to-br from-tiger-200 to-tiger-300 rounded-2xl p-6 aspect-square flex flex-col items-center justify-center text-6xl transform hover:scale-105 transition-all cursor-pointer group"
+                  >
+                    <span className="group-hover:scale-110 transition-transform">🚀</span>
+                    <span className="text-xs font-semibold text-tiger-800 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      New Arrivals
+                    </span>
+                  </Link>
+
+                  {/* Arts & Crafts */}
+                  <Link
+                    href={categories.find(c => c.slug === 'arts-crafts')
+                      ? `/products?category=${categories.find(c => c.slug === 'arts-crafts')?.id}`
+                      : '/products'}
+                    className="bg-gradient-to-br from-parrot-200 to-parrot-300 rounded-2xl p-6 aspect-square flex flex-col items-center justify-center text-6xl transform hover:scale-105 transition-all cursor-pointer group"
+                  >
+                    <span className="group-hover:scale-110 transition-transform">🎨</span>
+                    <span className="text-xs font-semibold text-parrot-800 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Arts & Crafts
+                    </span>
+                  </Link>
+
+                  {/* Dolls & Plush */}
+                  <Link
+                    href={categories.find(c => c.slug === 'dolls-plush')
+                      ? `/products?category=${categories.find(c => c.slug === 'dolls-plush')?.id}`
+                      : '/products'}
+                    className="bg-gradient-to-br from-banana-200 to-banana-300 rounded-2xl p-6 aspect-square flex flex-col items-center justify-center text-6xl transform hover:scale-105 transition-all cursor-pointer group"
+                  >
+                    <span className="group-hover:scale-110 transition-transform">🧸</span>
+                    <span className="text-xs font-semibold text-banana-800 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Dolls & Plush
+                    </span>
+                  </Link>
                 </div>
               </div>
               {/* Background decoration */}
@@ -229,6 +267,69 @@ export default function HomePage() {
                 </h3>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Why Parents Choose Us Section */}
+      <section className="py-16 bg-gradient-to-b from-jungle-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+              Why Parents Choose JungleeToys 💝
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Join thousands of happy families who trust us for their children's playtime
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Safety First */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="text-5xl mb-4">🛡️</div>
+              <h3 className="font-bold text-xl text-gray-900 mb-3">Safety First</h3>
+              <p className="text-gray-600">
+                Every toy is rigorously tested and certified to meet UK safety standards.
+                Your child's safety is our top priority.
+              </p>
+            </div>
+
+            {/* Educational Value */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="text-5xl mb-4">🎓</div>
+              <h3 className="font-bold text-xl text-gray-900 mb-3">Learning Through Play</h3>
+              <p className="text-gray-600">
+                Carefully selected toys that promote cognitive development, creativity,
+                and essential skills while keeping playtime fun!
+              </p>
+            </div>
+
+            {/* Quality Promise */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="text-5xl mb-4">⭐</div>
+              <h3 className="font-bold text-xl text-gray-900 mb-3">Premium Quality</h3>
+              <p className="text-gray-600">
+                Durable, long-lasting toys that withstand enthusiastic play.
+                Great value with our 30-day money-back guarantee.
+              </p>
+            </div>
+          </div>
+
+          {/* Testimonial */}
+          <div className="mt-12 bg-white rounded-2xl p-8 shadow-lg max-w-3xl mx-auto">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-banana-400">⭐</span>
+                ))}
+              </div>
+              <span className="text-sm text-gray-500">Rated 4.9/5 by parents</span>
+            </div>
+            <p className="text-gray-700 italic mb-4">
+              "As a mum of two, I love JungleeToys! The quality is amazing and my kids are
+              learning while having fun. Fast delivery and excellent customer service too!"
+            </p>
+            <p className="text-sm font-semibold text-gray-900">- Sarah, London</p>
           </div>
         </div>
       </section>

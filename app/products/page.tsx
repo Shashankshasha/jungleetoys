@@ -5,18 +5,16 @@ import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, SlidersHorizontal, X, ChevronDown, Search, Grid3X3, LayoutList } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
-import { Product } from '@/lib/supabase';
+import { Product, supabase } from '@/lib/supabase';
 
-const categories = [
-  { id: 'action-figures', name: 'Action Figures', emoji: '🦸' },
-  { id: 'educational', name: 'Educational', emoji: '📚' },
-  { id: 'outdoor', name: 'Outdoor Play', emoji: '⚽' },
-  { id: 'board-games', name: 'Board Games', emoji: '🎲' },
-  { id: 'building-blocks', name: 'Building Blocks', emoji: '🧱' },
-  { id: 'dolls-plush', name: 'Dolls & Plush', emoji: '🧸' },
-  { id: 'vehicles', name: 'Vehicles', emoji: '🚗' },
-  { id: 'arts-crafts', name: 'Arts & Crafts', emoji: '🎨' },
-];
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  image?: string;
+}
+
 
 const ageRanges = ['0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years'];
 const priceRanges = [
@@ -38,6 +36,7 @@ function ProductsContent() {
 
   // Product state
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filter states
@@ -50,6 +49,30 @@ function ProductsContent() {
   const [sortBy, setSortBy] = useState('featured');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Fetch categories from Supabase
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('id, name, slug, description, image')
+          .order('name');
+
+        if (error) {
+          console.error('Error fetching categories:', error);
+          return;
+        }
+
+        console.log('✅ Categories fetched:', data?.length || 0);
+        setCategories(data || []);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Fetch products from API (includes review statistics)
   useEffect(() => {
@@ -245,7 +268,6 @@ function ProductsContent() {
                         onChange={() => toggleCategory(category.id)}
                         className="rounded border-jungle-300 text-jungle-600 focus:ring-jungle-500"
                       />
-                      <span>{category.emoji}</span>
                       <span className="text-sm">{category.name}</span>
                     </label>
                   ))}
@@ -442,7 +464,6 @@ function ProductsContent() {
                           onChange={() => toggleCategory(category.id)}
                           className="rounded border-jungle-300 text-jungle-600"
                         />
-                        <span>{category.emoji}</span>
                         <span className="text-sm">{category.name}</span>
                       </label>
                     ))}

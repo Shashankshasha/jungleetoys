@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
       if (rates.length > 0) {
         const providers = rates.map((r: any) => r.carrier);
-        console.log('🏷️ Available carriers:', [...new Set(providers)]);
+        console.log('🏷️ Available carriers:', Array.from(new Set(providers)));
       }
 
       // Filter for enabled UK carriers and apply 50% markup
@@ -93,6 +93,19 @@ export async function POST(req: NextRequest) {
 
       console.log(`✅ Returning ${markedUpRates.length} marked up rates`);
 
+      // Collect ALL carriers EasyPost returned for debugging
+      const allCarriersFromEasyPost = Array.from(new Set(rates.map((r: any) => r.carrier)));
+      const allRatesDetails = rates.map((r: any) => ({
+        carrier: r.carrier,
+        service: r.service,
+        rate: r.rate,
+        enabled: isCarrierEnabled(r.carrier),
+      }));
+
+      console.log('🔍 DEBUG: All carriers from EasyPost:', allCarriersFromEasyPost);
+      console.log('🔍 DEBUG: Total rates received:', rates.length);
+      console.log('🔍 DEBUG: All rates details:', JSON.stringify(allRatesDetails, null, 2));
+
       // If no enabled carriers found, return fallback
       if (markedUpRates.length === 0) {
         console.log('⚠️ No enabled carrier rates available, using fallback');
@@ -110,12 +123,22 @@ export async function POST(req: NextRequest) {
           debug: {
             message: 'No enabled carriers available',
             totalRatesReceived: rates.length,
-            availableCarriers: [...new Set(rates.map((r: any) => r.carrier))],
+            availableCarriers: allCarriersFromEasyPost,
+            allRates: allRatesDetails,
           },
         });
       }
 
-      return NextResponse.json({ rates: markedUpRates });
+      // TEMPORARY: Include debug info to see what carriers EasyPost is returning
+      return NextResponse.json({
+        rates: markedUpRates,
+        debug: {
+          totalRatesReceived: rates.length,
+          totalRatesReturned: markedUpRates.length,
+          allCarriersFromEasyPost: allCarriersFromEasyPost,
+          allRates: allRatesDetails,
+        },
+      });
 
     } catch (easypostError: any) {
       console.error('❌ EasyPost API Error:', easypostError);

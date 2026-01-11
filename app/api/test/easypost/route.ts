@@ -55,7 +55,7 @@ export async function GET() {
     });
 
     const rates = shipment.rates || [];
-    const carriers = [...new Set(rates.map((r: any) => r.carrier))];
+    const carriers = Array.from(new Set(rates.map((r: any) => r.carrier)));
 
     console.log(`✅ Received ${rates.length} rates from ${carriers.length} carriers`);
 

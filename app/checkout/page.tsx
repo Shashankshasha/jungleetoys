@@ -77,7 +77,7 @@ export default function CheckoutPage() {
     });
 
     try {
-      const response = await fetch('/api/shipping/rates-easypost', {
+      const response = await fetch('/api/shipping/rates-shipengine', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

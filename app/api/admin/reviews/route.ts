@@ -27,10 +27,10 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const filter = searchParams.get('filter') || 'all'; // all, pending, approved
 
-    // Query reviews - try without product join first to debug
+    // Query reviews with product details
     let query = supabaseAdmin
       .from('reviews')
-      .select('*')
+      .select('*, products(id, name, images)')
       .order('created_at', { ascending: false });
 
     if (filter === 'pending') {

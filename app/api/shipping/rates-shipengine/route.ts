@@ -18,24 +18,24 @@ export async function POST(req: NextRequest) {
       // Your business address (from)
       const shipFrom = {
         name: 'JungleeToys',
-        company_name: 'JungleeToys',
-        address_line1: '483 Green Lanes',
-        city_locality: 'London',
-        state_province: '',
-        postal_code: 'N13 4BS',
-        country_code: 'GB',
+        companyName: 'JungleeToys',
+        addressLine1: '483 Green Lanes',
+        cityLocality: 'London',
+        stateProvince: '',
+        postalCode: 'N13 4BS',
+        countryCode: 'GB',
         phone: '+44 7342224136',
       };
 
       // Customer address (to)
       const shipTo = {
         name: toAddress.name,
-        address_line1: toAddress.street1,
-        address_line2: toAddress.street2 || '',
-        city_locality: toAddress.city,
-        state_province: toAddress.state || '',
-        postal_code: toAddress.zip,
-        country_code: toAddress.country,
+        addressLine1: toAddress.street1,
+        addressLine2: toAddress.street2 || '',
+        cityLocality: toAddress.city,
+        stateProvince: toAddress.state || '',
+        postalCode: toAddress.zip,
+        countryCode: toAddress.country,
         phone: toAddress.phone || '',
       };
 
@@ -58,34 +58,34 @@ export async function POST(req: NextRequest) {
       // Get rates from ShipEngine
       const ratesResponse = await shipengine.getRatesWithShipmentDetails({
         shipment: {
-          ship_from: shipFrom,
-          ship_to: shipTo,
+          shipFrom: shipFrom,
+          shipTo: shipTo,
           packages: [packageDetails],
         },
-        rate_options: {
-          carrier_ids: [], // Empty means all connected carriers
+        rateOptions: {
+          carrierIds: [], // Empty means all connected carriers
         },
       });
 
-      const rates = ratesResponse.rate_response?.rates || [];
+      const rates = ratesResponse.rateResponse?.rates || [];
 
       console.log(`✅ Received ${rates.length} rates from ShipEngine`);
 
       if (rates.length > 0) {
-        const providers = rates.map((r: any) => r.carrier_friendly_name || r.carrier_code);
+        const providers = rates.map((r: any) => r.carrierFriendlyName || r.carrierCode);
         console.log('🏷️ Available carriers:', Array.from(new Set(providers)));
       }
 
       // Collect ALL carriers for debugging
       const allCarriersFromShipEngine = Array.from(
-        new Set(rates.map((r: any) => r.carrier_friendly_name || r.carrier_code))
+        new Set(rates.map((r: any) => r.carrierFriendlyName || r.carrierCode))
       );
       const allRatesDetails = rates.map((r: any) => ({
-        carrier: r.carrier_friendly_name || r.carrier_code,
-        service: r.service_type,
-        rate: r.shipping_amount?.amount,
-        currency: r.shipping_amount?.currency,
-        enabled: isCarrierEnabled(r.carrier_friendly_name || r.carrier_code),
+        carrier: r.carrierFriendlyName || r.carrierCode,
+        service: r.serviceType,
+        rate: r.shippingAmount?.amount,
+        currency: r.shippingAmount?.currency,
+        enabled: isCarrierEnabled(r.carrierFriendlyName || r.carrierCode),
       }));
 
       console.log('🔍 DEBUG: All carriers from ShipEngine:', allCarriersFromShipEngine);
@@ -95,27 +95,27 @@ export async function POST(req: NextRequest) {
       // Filter for enabled carriers and apply 50% markup
       const markedUpRates = rates
         .filter((rate: any) => {
-          const carrierName = rate.carrier_friendly_name || rate.carrier_code;
+          const carrierName = rate.carrierFriendlyName || rate.carrierCode;
           const enabled = isCarrierEnabled(carrierName);
-          console.log(`🔍 ${carrierName} (${rate.service_type}): ${enabled ? '✅ ENABLED' : '❌ DISABLED'}`);
+          console.log(`🔍 ${carrierName} (${rate.serviceType}): ${enabled ? '✅ ENABLED' : '❌ DISABLED'}`);
           return enabled;
         })
         .map((rate: any) => {
-          const originalAmount = parseFloat(rate.shipping_amount.amount);
+          const originalAmount = parseFloat(rate.shippingAmount.amount);
           const markedUpAmount = (originalAmount * 1.5).toFixed(2); // 50% markup
 
-          const carrierName = rate.carrier_friendly_name || rate.carrier_code;
-          console.log(`💰 ${carrierName} ${rate.service_type}: £${rate.shipping_amount.amount} → £${markedUpAmount}`);
+          const carrierName = rate.carrierFriendlyName || rate.carrierCode;
+          console.log(`💰 ${carrierName} ${rate.serviceType}: £${rate.shippingAmount.amount} → £${markedUpAmount}`);
 
           return {
-            id: rate.rate_id,
+            id: rate.rateId,
             provider: carrierName,
-            serviceName: rate.service_type,
+            serviceName: rate.serviceType,
             amount: markedUpAmount,
-            originalAmount: rate.shipping_amount.amount,
-            currency: rate.shipping_amount.currency,
-            estimatedDays: rate.delivery_days || '3-5',
-            shipengineRateId: rate.rate_id, // Store for label purchase
+            originalAmount: rate.shippingAmount.amount,
+            currency: rate.shippingAmount.currency,
+            estimatedDays: rate.deliveryDays || '3-5',
+            shipengineRateId: rate.rateId, // Store for label purchase
           };
         })
         .sort((a: any, b: any) => parseFloat(a.amount) - parseFloat(b.amount));

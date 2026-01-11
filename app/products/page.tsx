@@ -360,10 +360,10 @@ function ProductsContent() {
                   return (
                     <span
                       key={catId}
-                      className="inline-flex items-center gap-1 bg-jungle-100 text-jungle-700 
+                      className="inline-flex items-center gap-1 bg-jungle-100 text-jungle-700
                                px-3 py-1 rounded-full text-sm"
                     >
-                      {cat?.emoji} {cat?.name}
+                      {cat?.name}
                       <button onClick={() => toggleCategory(catId)}>
                         <X className="h-3 w-3" />
                       </button>

@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
       if (rates.length > 0) {
         const providers = rates.map((r: any) => r.carrier);
-        console.log('🏷️ Available carriers:', [...new Set(providers)]);
+        console.log('🏷️ Available carriers:', Array.from(new Set(providers)));
       }
 
       // Filter for enabled UK carriers and apply 50% markup
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
           debug: {
             message: 'No enabled carriers available',
             totalRatesReceived: rates.length,
-            availableCarriers: [...new Set(rates.map((r: any) => r.carrier))],
+            availableCarriers: Array.from(new Set(rates.map((r: any) => r.carrier))),
           },
         });
       }

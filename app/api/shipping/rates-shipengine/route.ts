@@ -64,9 +64,6 @@ export async function POST(req: NextRequest) {
           shipTo: shipTo,
           packages: [packageDetails],
         },
-        rateOptions: {
-          carrierIds: [], // Empty means all connected carriers
-        },
       });
 
       const rates = ratesResponse.rateResponse?.rates || [];

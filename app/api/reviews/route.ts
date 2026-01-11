@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
 
 // GET /api/reviews?productId=xxx - Get approved reviews for a product
 export async function GET(req: NextRequest) {
@@ -73,7 +73,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Insert review (will be unapproved by default)
-    const { data: review, error } = await supabase
+    // Use supabaseAdmin to bypass RLS for server-side insert
+    const { data: review, error } = await supabaseAdmin
       .from('reviews')
       .insert({
         product_id: productId,
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error('Error creating review:', error);
       return NextResponse.json(
-        { error: 'Failed to submit review' },
+        { error: 'Failed to submit review', details: error.message },
         { status: 500 }
       );
     }
